@@ -13,6 +13,8 @@
   --radius: 26px;
   --display: 'Bricolage Grotesque', ui-sans-serif, system-ui, sans-serif;
   --body: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  /* The wordmark only: a high-contrast Didone serif. */
+  --brand: 'Bodoni Moda', 'Didot', 'Bodoni 72', Georgia, serif;
   /* Glass and photo surfaces sit on food photos, so they stay dark in both themes. */
   --photo-bg: #17181b;
   --glass-bg: rgba(20, 21, 24, 0.42);
@@ -71,13 +73,16 @@ ul, ol { margin: 0; padding: 0; }
 }
 
 .brand {
-  font-family: var(--display);
-  font-weight: 800;
-  font-size: 26px;
-  letter-spacing: -0.03em;
+  font-family: var(--brand);
+  font-weight: 700;
+  font-size: 30px;
+  line-height: 1;
+  letter-spacing: -0.01em;
+  /* Small optical size keeps the hairlines visible at header size. */
+  font-variation-settings: 'opsz' 11;
 }
 .brand::after { content: '.'; color: var(--accent); }
-.brand--big { font-size: 56px; }
+.brand--big { font-size: 64px; font-variation-settings: 'opsz' 48; }
 
 .topbar { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px 6px; }
 .page-head { display: flex; align-items: baseline; justify-content: space-between; }
