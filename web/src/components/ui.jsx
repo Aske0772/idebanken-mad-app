@@ -64,7 +64,3 @@ export function DishArt({ recipe, className = '' }) {
     </div>
   );
 }
-
-export function StoreDot({ color }) {
-  return <span className="store-dot" style={{ background: color }} />;
-}

@@ -30,27 +30,7 @@ export function packSize(amount, ing) {
   return `${num1.format(amount)} ${ing.label ?? 'stk'}`;
 }
 
-// The last day a price is valid. Tjek stores end times like 22:59 UTC (23:59 Danish
-// time), so the local date is the day the offer is last valid.
-export function untilLabel(iso) {
-  if (!iso) return '';
-  const d = new Date(iso);
-  return `til ${d.toLocaleDateString('da-DK', { weekday: 'short', day: 'numeric', month: 'numeric' })}`;
-}
-
-// Where a price comes from, in a few words.
-export function sourceLabel(source, storesById) {
-  const store = source.offer ? storesById[source.offer.store]?.name : null;
-  switch (source.kind) {
-    case 'tilbud': return `${store} · tilbud ${untilLabel(source.offer.until)}`;
-    case 'fast': return `${store} · fast pris`;
-    case 'hylde': return `${store} · hyldepris`;
-    case 'reference': return `vejledende · ${store}`;
-    default: return 'anslået pris';
-  }
-}
-
-// Same information split for a compact box: where to buy it, and what kind of price it is.
+// Where a price comes from, split for a compact box: the store, and what kind of price it is.
 export function sourceParts(source, storesById) {
   const store = source.offer ? storesById[source.offer.store]?.name : null;
   switch (source.kind) {

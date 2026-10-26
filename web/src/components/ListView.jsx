@@ -1,8 +1,7 @@
 import { useState } from 'react';
-import { StoreDot } from './ui.jsx';
 import { Check, Home, Share, Undo } from './icons.jsx';
 import { isExact } from '../lib/pricing.js';
-import { kr, packSize, capitalize, sourceLabel, updatedLabel } from '../lib/format.js';
+import { kr, packSize, capitalize, sourceParts, updatedLabel } from '../lib/format.js';
 
 export function ListView({ data, list, checked, onCheck, onAtHome, onBackHome }) {
   const storesById = Object.fromEntries(data.stores.map((s) => [s.id, s]));
@@ -29,6 +28,8 @@ export function ListView({ data, list, checked, onCheck, onAtHome, onBackHome })
   };
 
   const empty = list.groups.length === 0;
+  const items = list.groups.flatMap((g) => g.items);
+  const done = items.filter((i) => checked.includes(i.id)).length;
 
   return (
     <div className="page">
@@ -40,45 +41,60 @@ export function ListView({ data, list, checked, onCheck, onAtHome, onBackHome })
           </button>
         )}
       </header>
-      <p className="muted small fresh">Priser opdateret {updatedLabel(data.refreshedAt)}</p>
 
-      {empty && <div className="empty"><p>Listen fyldes, når du tilføjer retter til ugen.</p></div>}
+      {empty ? (
+        <div className="empty"><p>Listen fyldes, når du tilføjer retter til ugen.</p></div>
+      ) : (
+        <div className="summary">
+          <div className="summary-total">{kr(list.total)}</div>
+          <div className="summary-sub"><strong>{done}</strong> af {items.length} varer i kurven</div>
+          <div
+            className="shop-progress" role="progressbar" aria-label="Varer i kurven"
+            aria-valuemin={0} aria-valuemax={items.length} aria-valuenow={done}
+          >
+            <span style={{ width: `${(done / items.length) * 100}%` }} />
+          </div>
+          <div className="summary-fresh">
+            Priser opdateret {updatedLabel(data.refreshedAt)}
+            {list.approx > 0 && ` · heraf ca. ${kr(list.approx)} vejledende`}
+          </div>
+        </div>
+      )}
 
       {list.groups.map((g) => {
         const store = storesById[g.key];
         return (
-          <section key={g.key} className="list-group">
-            <h2 className="list-group-head">
-              {store ? <StoreDot color={store.color} /> : null}
-              <span className="grow">{store ? store.name : 'Øvrige varer'}</span>
-              <span className="muted">{store ? '' : 'ca. '}{kr(g.total)}</span>
+          <section key={g.key} className="shop-group" aria-label={store ? store.name : 'Øvrige varer'}>
+            <h2 className="shop-group-title">
+              <span>{store ? store.name : 'Øvrige varer'}</span>
+              <span>{store ? '' : 'ca. '}{kr(g.total)}</span>
             </h2>
             {!store && (
-              <p className="muted small">Ingen pris i dine butikker. Prisen er REMA 1000's hyldepris eller et skøn.</p>
+              <p className="shop-group-hint">Ingen pris i dine butikker. Prisen er REMA 1000's hyldepris eller et skøn.</p>
             )}
-            <ul className="list">
+            <ul className="shop-items">
               {g.items.map((i) => {
-                const done = checked.includes(i.id);
+                const on = checked.includes(i.id);
+                // The store is already the section title; only "Øvrige varer" names it per item.
+                const { store: where, note } = sourceParts(i.source, storesById);
                 return (
-                  <li key={i.id} className={done ? 'is-done' : ''}>
+                  <li key={i.id} className={`shop-item ${on ? 'is-done' : ''}`}>
                     <button
-                      type="button" className="check" aria-pressed={done}
-                      aria-label={`${i.ing.name} ${done ? 'købt' : 'ikke købt'}`}
+                      type="button" className="shop-check" aria-pressed={on}
+                      aria-label={`${capitalize(i.ing.name)} ${on ? 'købt' : 'ikke købt'}`}
                       onClick={() => onCheck(i.id)}
                     >
-                      {done && <Check size={16} />}
+                      {on && <Check size={15} />}
                     </button>
-                    <span className="list-text">
-                      <span className="list-name">{capitalize(i.ing.name)}</span>
-                      <span className="muted small">{product(i)}</span>
-                      <span className={`small src ${i.source.kind}`}>{sourceLabel(i.source, storesById)}</span>
+                    <span className="shop-text">
+                      <span className="shop-name">{capitalize(i.ing.name)}</span>
+                      <span className="shop-product">{product(i)}</span>
+                      <span className={`shop-kind ${i.source.kind}`}>{store ? note : [where, note].filter(Boolean).join(' · ')}</span>
                     </span>
-                    <span className="list-price">{isExact(i.source) ? '' : 'ca. '}{kr(i.source.cost)}</span>
-                    {i.ing.staple ? (
-                      <span className="icon-btn" aria-hidden="true" />
-                    ) : (
-                      <button type="button" className="icon-btn" aria-label={`Har ${i.ing.name} hjemme`} onClick={() => onAtHome(i.id)}>
-                        <Home size={18} />
+                    <span className="shop-price">{isExact(i.source) ? '' : 'ca. '}{kr(i.source.cost)}</span>
+                    {!i.ing.staple && (
+                      <button type="button" className="shop-home" aria-label={`Har ${i.ing.name} hjemme`} onClick={() => onAtHome(i.id)}>
+                        <Home size={17} />
                       </button>
                     )}
                   </li>
@@ -90,14 +106,14 @@ export function ListView({ data, list, checked, onCheck, onAtHome, onBackHome })
       })}
 
       {list.home.length > 0 && (
-        <section className="list-group">
-          <h2 className="list-group-head"><Home size={16} /> <span className="grow">Har hjemme</span></h2>
-          <ul className="list">
+        <section className="shop-group" aria-label="Har hjemme">
+          <h2 className="shop-group-title"><span>Har hjemme</span></h2>
+          <p className="shop-group-hint">Tryk for at købe det alligevel.</p>
+          <ul className="shop-home-list">
             {list.home.map((i) => (
-              <li key={i.id} className="is-done">
-                <span className="list-text"><span className="list-name">{capitalize(i.ing.name)}</span></span>
-                <button type="button" className="icon-btn" aria-label={`Køb ${i.ing.name} alligevel`} onClick={() => onBackHome(i.id)}>
-                  <Undo size={18} />
+              <li key={i.id}>
+                <button type="button" className="shop-pill" aria-label={`Køb ${i.ing.name} alligevel`} onClick={() => onBackHome(i.id)}>
+                  {capitalize(i.ing.name)} <Undo size={14} />
                 </button>
               </li>
             ))}
@@ -105,15 +121,6 @@ export function ListView({ data, list, checked, onCheck, onAtHome, onBackHome })
         </section>
       )}
 
-      {!empty && (
-        <div className="list-total">
-          <span>I alt</span>
-          <strong>{kr(list.total)}</strong>
-        </div>
-      )}
-      {list.approx > 0 && (
-        <p className="muted small center">heraf ca. {kr(list.approx)} for varer uden pris i dine butikker</p>
-      )}
       {toast && <div className="toast" role="status">{toast}</div>}
     </div>
   );
