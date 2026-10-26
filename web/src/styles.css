@@ -286,6 +286,9 @@ ul, ol { margin: 0; padding: 0; }
   background: rgba(255, 255, 255, 0.08); border: 1px solid var(--glass-border);
 }
 .ing-box.is-home { opacity: 0.6; }
+/* Only the word "tilbud" is tinted; the box itself stays neutral glass. */
+.ing-box.is-tilbud .box-kind { color: #ffb49c; font-weight: 650; }
+.ing-box.is-tilbud .box-src { opacity: 0.9; }
 .box-name { font-size: 14px; font-weight: 700; line-height: 1.25; }
 .box-qty { font-size: 13px; opacity: 0.75; }
 .box-foot { margin-top: auto; padding-top: 10px; display: flex; justify-content: space-between; align-items: flex-end; gap: 8px; }

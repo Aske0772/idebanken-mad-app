@@ -8,6 +8,8 @@ import { kr, krSmall, qty, capitalize, sourceParts } from '../lib/format.js';
 // Order of ingredient groups in the dish view (keys from server CATEGORIES).
 const CATEGORY_ORDER = ['kod', 'fisk', 'gront', 'mejeri', 'brod', 'kolonial', 'frost'];
 
+const isTilbud = (line) => line.source?.kind === 'tilbud';
+
 const groupByCategory = (lines) =>
   CATEGORY_ORDER
     .map((cat) => ({ cat, lines: lines.filter((l) => l.ing.cat === cat) }))
@@ -95,7 +97,7 @@ export function DishDetail({ data, recipe, item, mode, prefs, saved, onToggleSav
                 <h3 className="ing-group-title">{data.categories[g.cat]}</h3>
                 <ul className="ing-boxes">
                   {g.lines.map((l) => (
-                    <li key={l.id} className={`ing-box ${l.source ? '' : 'is-home'}`}>
+                    <li key={l.id} className={`ing-box ${l.source ? '' : 'is-home'} ${isTilbud(l) ? 'is-tilbud' : ''}`}>
                       <IngredientBody line={l} storesById={storesById} />
                     </li>
                   ))}
@@ -112,7 +114,7 @@ export function DishDetail({ data, recipe, item, mode, prefs, saved, onToggleSav
                     return (
                       <li key={l.id}>
                         <button
-                          type="button" className={`ing-box as-button ${on ? 'is-on' : ''}`}
+                          type="button" className={`ing-box as-button ${on ? 'is-on' : ''} ${on && isTilbud(l) ? 'is-tilbud' : ''}`}
                           aria-pressed={on} onClick={() => toggleStaple(l.id)}
                         >
                           {on ? (
@@ -172,7 +174,7 @@ function IngredientBody({ line, storesById }) {
       <span className="box-foot">
         <span className={`box-src ${exact ? '' : 'is-approx'}`}>
           {store && <span className="box-store">{store}</span>}
-          <span>{note}</span>
+          <span className="box-kind">{note}</span>
         </span>
         <span className="box-price">{exact ? '' : 'ca. '}{kr(source.cost)}</span>
       </span>
