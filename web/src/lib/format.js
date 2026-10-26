@@ -50,6 +50,21 @@ export function sourceLabel(source, storesById) {
   }
 }
 
+// Same information split for a compact box: where to buy it, and what kind of price it is.
+export function sourceParts(source, storesById) {
+  const store = source.offer ? storesById[source.offer.store]?.name : null;
+  switch (source.kind) {
+    case 'tilbud': {
+      const day = new Date(source.offer.until).toLocaleDateString('da-DK', { weekday: 'short' });
+      return { store, note: `tilbud til ${day}` };
+    }
+    case 'fast': return { store, note: 'fast pris' };
+    case 'hylde': return { store, note: 'hyldepris' };
+    case 'reference': return { store, note: 'vejledende' };
+    default: return { store: null, note: 'anslået' };
+  }
+}
+
 // "i dag kl. 10.15", "i går kl. 18.02" or "24.10 kl. 09.00"
 export function updatedLabel(iso) {
   if (!iso) return '';

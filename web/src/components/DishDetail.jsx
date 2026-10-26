@@ -1,9 +1,17 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { DishArt, StoreDot } from './ui.jsx';
-import { X, Heart, Minus, Plus, Clock, Tag } from './icons.jsx';
+import { DishArt } from './ui.jsx';
+import { X, Heart, Minus, Plus, Clock, Tag, Check } from './icons.jsx';
 import { DIET_LABEL } from './SwipeView.jsx';
 import { priceDish, isExact } from '../lib/pricing.js';
-import { kr, krSmall, qty, capitalize, sourceLabel } from '../lib/format.js';
+import { kr, krSmall, qty, capitalize, sourceParts } from '../lib/format.js';
+
+// Order of ingredient groups in the dish view (keys from server CATEGORIES).
+const CATEGORY_ORDER = ['kod', 'fisk', 'gront', 'mejeri', 'brod', 'kolonial', 'frost'];
+
+const groupByCategory = (lines) =>
+  CATEGORY_ORDER
+    .map((cat) => ({ cat, lines: lines.filter((l) => l.ing.cat === cat) }))
+    .filter((g) => g.lines.length > 0);
 
 // Full-screen dish view: the photo fills the screen and a frosted glass panel
 // holds everything about the dish. mode: 'add' (from the deck) or 'edit' (from the week).
@@ -81,35 +89,47 @@ export function DishDetail({ data, recipe, item, mode, prefs, saved, onToggleSav
         </div>
 
         {tab === 'ingredienser' ? (
-          <div role="tabpanel">
-            <ul className="ing-grid">
-              {bought.map((l) => (
-                <li key={l.id} className={l.source ? '' : 'is-muted'}>
-                  <span className="ing-row">
-                    <span className="ing-name">{capitalize(l.ing.name)}</span>
-                    <span className="ing-qty">{qty(l.need, l.ing)}</span>
-                  </span>
-                  <span className={`ing-src ${l.source && !isExact(l.source) ? 'is-approx' : ''}`}>
-                    {l.source && isExact(l.source) && <StoreDot color={storesById[l.source.offer.store]?.color} />}
-                    {l.source ? `${sourceLabel(l.source, storesById)} · ${isExact(l.source) ? '' : 'ca. '}${kr(l.source.cost)}` : 'har hjemme'}
-                  </span>
-                </li>
-              ))}
-            </ul>
-            {stapleLines.length > 0 && (
-              <div className="detail-staples">
-                <span>Basisvarer er ikke med. Mangler du noget?</span>
-                <div className="chips-wrap">
-                  {stapleLines.map((l) => (
-                    <button
-                      key={l.id} type="button" className={`glass-chip as-button ${staples.includes(l.id) ? 'is-on' : ''}`}
-                      aria-pressed={staples.includes(l.id)} onClick={() => toggleStaple(l.id)}
-                    >
-                      {l.ing.name}{l.source ? ` · ${kr(l.source.cost)}` : ''}
-                    </button>
+          <div role="tabpanel" className="ing-groups">
+            {groupByCategory(bought).map((g) => (
+              <section key={g.cat} className="ing-group" aria-label={data.categories[g.cat]}>
+                <h3 className="ing-group-title">{data.categories[g.cat]}</h3>
+                <ul className="ing-boxes">
+                  {g.lines.map((l) => (
+                    <li key={l.id} className={`ing-box ${l.source ? '' : 'is-home'}`}>
+                      <IngredientBody line={l} storesById={storesById} />
+                    </li>
                   ))}
-                </div>
-              </div>
+                </ul>
+              </section>
+            ))}
+            {stapleLines.length > 0 && (
+              <section className="ing-group" aria-label="Basisvarer">
+                <h3 className="ing-group-title">Basisvarer</h3>
+                <p className="ing-group-hint">Ikke med i prisen. Tryk på det, du mangler.</p>
+                <ul className="ing-boxes">
+                  {stapleLines.map((l) => {
+                    const on = staples.includes(l.id);
+                    return (
+                      <li key={l.id}>
+                        <button
+                          type="button" className={`ing-box as-button ${on ? 'is-on' : ''}`}
+                          aria-pressed={on} onClick={() => toggleStaple(l.id)}
+                        >
+                          {on ? (
+                            <IngredientBody line={l} storesById={storesById} />
+                          ) : (
+                            <>
+                              <span className="box-name">{capitalize(l.ing.name)}</span>
+                              <span className="box-note">Har det hjemme</span>
+                            </>
+                          )}
+                          <span className="box-check" aria-hidden="true">{on ? <Check size={14} /> : <Plus size={14} />}</span>
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </section>
             )}
           </div>
         ) : (
@@ -128,6 +148,35 @@ export function DishDetail({ data, recipe, item, mode, prefs, saved, onToggleSav
         </button>
       </div>
     </div>
+  );
+}
+
+// One ingredient: name, amount, where to buy it and what it costs.
+function IngredientBody({ line, storesById }) {
+  const { source } = line;
+  if (!source) {
+    return (
+      <>
+        <span className="box-name">{capitalize(line.ing.name)}</span>
+        <span className="box-qty">{qty(line.need, line.ing)}</span>
+        <span className="box-note">Har hjemme</span>
+      </>
+    );
+  }
+  const { store, note } = sourceParts(source, storesById);
+  const exact = isExact(source);
+  return (
+    <>
+      <span className="box-name">{capitalize(line.ing.name)}</span>
+      <span className="box-qty">{qty(line.need, line.ing)}</span>
+      <span className="box-foot">
+        <span className={`box-src ${exact ? '' : 'is-approx'}`}>
+          {store && <span className="box-store">{store}</span>}
+          <span>{note}</span>
+        </span>
+        <span className="box-price">{exact ? '' : 'ca. '}{kr(source.cost)}</span>
+      </span>
+    </>
   );
 }
 

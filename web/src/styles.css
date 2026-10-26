@@ -177,7 +177,6 @@ ul, ol { margin: 0; padding: 0; }
   background: var(--glass-bg); border: 1px solid var(--glass-border);
   backdrop-filter: blur(14px) saturate(140%); -webkit-backdrop-filter: blur(14px) saturate(140%);
 }
-.glass-chip.as-button.is-on { background: #fff; color: #16150f; }
 .glass-btn {
   width: 42px; height: 42px; border-radius: 50%; flex: none; display: grid; place-items: center; color: #fff;
   background: var(--glass-bg); border: 1px solid var(--glass-border);
@@ -231,7 +230,6 @@ ul, ol { margin: 0; padding: 0; }
 @keyframes rise { from { transform: translateY(40px); opacity: 0; } }
 @keyframes fade { from { opacity: 0; } }
 
-.chips-wrap { display: flex; flex-wrap: wrap; gap: 6px; }
 .src.reference, .src.estimate { color: #b4690e; }
 .src { color: var(--muted); }
 .src.tilbud { color: var(--accent); font-weight: 600; }
@@ -275,18 +273,34 @@ ul, ol { margin: 0; padding: 0; }
 .segmented { display: grid; grid-template-columns: 1fr 1fr; padding: 4px; border-radius: 999px; background: rgba(255, 255, 255, 0.1); }
 .segmented button { height: 38px; border-radius: 999px; font-size: 14px; font-weight: 650; color: rgba(255, 255, 255, 0.75); }
 .segmented button.is-on { background: #fff; color: #16150f; }
-.ing-grid { list-style: none; display: grid; grid-template-columns: 1fr 1fr; column-gap: 16px; row-gap: 12px; }
-.ing-grid li { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
-.ing-grid li.is-muted { opacity: 0.55; }
-.ing-row { display: flex; justify-content: space-between; gap: 8px; font-size: 14px; font-weight: 650; }
-.ing-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ing-qty { font-weight: 500; white-space: nowrap; opacity: 0.85; }
-.ing-src {
-  display: flex; align-items: center; gap: 5px; font-size: 11px; opacity: 0.75;
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+/* Ingredients: one box per item (common region), grouped by category (proximity),
+   every box built the same way (similarity). */
+.ing-groups { display: flex; flex-direction: column; gap: 22px; }
+.ing-group-title { margin-bottom: 8px; font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; opacity: 0.7; }
+.ing-group-hint { margin: -4px 0 10px; font-size: 12px; opacity: 0.7; }
+.ing-boxes { list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.ing-boxes li { display: flex; }
+.ing-box {
+  position: relative; width: 100%; min-height: 108px; padding: 12px; border-radius: 16px;
+  display: flex; flex-direction: column; gap: 2px; text-align: left; color: #fff;
+  background: rgba(255, 255, 255, 0.08); border: 1px solid var(--glass-border);
 }
-.ing-src.is-approx { color: #ffc27a; opacity: 1; }
-.detail-staples { margin-top: 16px; display: flex; flex-direction: column; gap: 8px; font-size: 13px; }
+.ing-box.is-home { opacity: 0.6; }
+.box-name { font-size: 14px; font-weight: 700; line-height: 1.25; }
+.box-qty { font-size: 13px; opacity: 0.75; }
+.box-foot { margin-top: auto; padding-top: 10px; display: flex; justify-content: space-between; align-items: flex-end; gap: 8px; }
+.box-src { display: flex; flex-direction: column; font-size: 11px; line-height: 1.35; opacity: 0.75; min-width: 0; }
+.box-src.is-approx { color: #ffc27a; opacity: 1; }
+.box-store { font-weight: 650; }
+.box-price { font-family: var(--display); font-size: 16px; font-weight: 750; white-space: nowrap; }
+.box-note { margin-top: auto; padding-top: 10px; font-size: 12px; opacity: 0.7; }
+.ing-box.as-button .box-name { padding-right: 26px; }
+.ing-box.as-button.is-on { background: rgba(255, 255, 255, 0.18); border-color: rgba(255, 255, 255, 0.45); }
+.box-check {
+  position: absolute; top: 10px; right: 10px; width: 24px; height: 24px; border-radius: 50%;
+  display: grid; place-items: center; background: rgba(255, 255, 255, 0.14);
+}
+.ing-box.is-on .box-check { background: #fff; color: #16150f; }
 .detail-steps { padding-left: 22px; display: flex; flex-direction: column; gap: 12px; font-size: 15px; line-height: 1.5; }
 .detail-steps li::marker { font-family: var(--display); font-weight: 800; color: var(--accent); }
 .detail-actions {
