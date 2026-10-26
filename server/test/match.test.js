@@ -63,6 +63,15 @@ test('drops a weight-priced offer with no printed size', () => {
   assert.deepEqual(matchOffer({ heading: 'Dansk kyllingebrystfilet', price: 25, quantity: null }), []);
 });
 
+test('small packs of meat are pålæg, not the raw ingredient', () => {
+  const coldCuts = { heading: 'Kyllingebryst', price: 10, quantity: { unit: 'kg', amount: 0.08 } };
+  assert.deepEqual(matchOffer(coldCuts, { shelf: true }), []);
+  const fillet = { heading: 'Kyllingebrystfilet', price: 27.95, quantity: { unit: 'kg', amount: 0.28 } };
+  assert.equal(matchOffer(fillet, { shelf: true })[0].ingredientId, 'kyllingebryst');
+  // Bacon really is sold in 100 g packs.
+  assert.equal(matchOffer({ heading: 'Brunchy bacon i skiver', price: 5, quantity: { unit: 'kg', amount: 0.1 } })[0].ingredientId, 'bacon');
+});
+
 test('shelf products are vetoed on their description too', () => {
   const p = { heading: 'Citron', description: '1000 GR. / CHEASY, YOGHURT', price: 21.95, quantity: { unit: 'kg', amount: 1 } };
   assert.deepEqual(matchOffer(p, { shelf: true }), []);

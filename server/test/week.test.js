@@ -26,10 +26,17 @@ const SHELF = [{
   price: 11.95, prePrice: null, quantity: { unit: 'kg', amount: 1 }, image: null,
   runFrom: at(-10), runTill: at(20)
 }];
+// Lidl's everyday prices have no end date.
+const LIDL_SHELF = [{
+  id: 'lidl-1', storeId: '71c90', heading: 'Sukker', description: '1 kg · Pr. kg 6,00',
+  price: 6, prePrice: null, quantity: { unit: 'kg', amount: 1 }, image: null,
+  runFrom: at(-30), runTill: null
+}];
+const SHELVES = { '11deC': async () => SHELF, '71c90': async () => LIDL_SHELF };
 
 const refresh = (db, extra = {}) => refreshWeek(db, {
   fetchOffers: async (id) => FAKE[id] ?? [],
-  fetchShelf: async () => SHELF,
+  fetchShelves: SHELVES,
   log: () => {},
   ...extra
 });
@@ -66,6 +73,7 @@ test('catalog and shelf prices are kept, labelled by kind', async () => {
   const payload = weekPayload(db, await refresh(db));
   assert.equal(payload.offers.bacon[0].kind, 'fast');
   assert.deepEqual(payload.offers.ris.map((o) => [o.kind, o.price]), [['hylde', 11.95]]);
+  assert.deepEqual(payload.offers.sukker.map((o) => [o.kind, o.store, o.price]), [['hylde', '71c90', 6]]);
 });
 
 test('every recipe is sent so planned dishes can still be priced', async () => {
@@ -88,10 +96,16 @@ test('a store that fails keeps its last good offers', async () => {
   assert.match(payload.errors.join(), /netto.dk nede/);
 });
 
-test('a failing shelf source does not stop the refresh', async () => {
+test('a failing shelf source keeps its last good prices and leaves the others alone', async () => {
   const db = openDb(':memory:');
-  await refresh(db, { fetchShelf: async () => { throw new Error('offline'); } });
-  assert.match(weekPayload(db, weekKey()).errors.join(), /REMA hyldepriser/);
+  await refresh(db);
+  await refresh(db, {
+    fetchShelves: { ...SHELVES, '11deC': async () => { throw new Error('offline'); } }
+  });
+  const payload = weekPayload(db, weekKey());
+  assert.match(payload.errors.join(), /REMA 1000 hyldepriser: offline/);
+  assert.equal(payload.offers.ris[0].price, 11.95);
+  assert.equal(payload.offers.sukker[0].store, '71c90');
 });
 
 test('refreshWeek fails loudly when no store answers', async () => {

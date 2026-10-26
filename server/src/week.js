@@ -3,7 +3,8 @@ import { join } from 'node:path';
 import { STORES } from './stores.js';
 import { INGREDIENTS, CATEGORIES } from './ingredients.js';
 import { fetchDealerOffers } from './sources/tjek.js';
-import { fetchRemaShelf } from './sources/rema.js';
+import { fetchRemaShelf, REMA_STORE_ID } from './sources/rema.js';
+import { fetchLidlShelf, LIDL_STORE_ID } from './sources/lidl.js';
 import { matchOffer } from './match.js';
 import { DATA_DIR } from './db.js';
 
@@ -37,11 +38,17 @@ const location = () => ({
   lng: Number(process.env.LNG ?? 12.5683)
 });
 
-// Scrape every store's avis plus REMA's shelf prices, match them to ingredients
-// and store the week's dishes. A store that fails keeps its last good offers.
+// Chains whose everyday (shelf) prices we can read, by store id.
+export const SHELF_SOURCES = { [REMA_STORE_ID]: fetchRemaShelf, [LIDL_STORE_ID]: fetchLidlShelf };
+
+const storeName = (id) => STORES.find((s) => s.id === id)?.name ?? id;
+
+// Scrape every store's avis plus the shelf prices we have, match them to
+// ingredients and store the week's dishes. A store or shelf source that fails
+// keeps its last good prices.
 export async function refreshWeek(db, {
   fetchOffers = fetchDealerOffers,
-  fetchShelf = fetchRemaShelf,
+  fetchShelves = SHELF_SOURCES,
   log = console.log
 } = {}) {
   const week = weekKey();
@@ -61,15 +68,19 @@ export async function refreshWeek(db, {
   }
   if (offers.length === 0) throw new Error(`Ingen tilbud hentet. ${errors.join('; ')}`);
 
-  let shelf = [];
-  let shelfOk = false;
-  try {
-    shelf = await fetchShelf();
-    shelfOk = true;
-    log(`  REMA hyldepriser ${shelf.length} varer`);
-  } catch (err) {
-    errors.push(`REMA hyldepriser: ${err.message}`);
-    log(`  REMA hyldepriser FEJL ${err.message}`);
+  const shelf = [];
+  const shelfFetched = new Set();
+  for (const [storeId, fetchShelf] of Object.entries(fetchShelves)) {
+    const label = `${storeName(storeId)} hyldepriser`;
+    try {
+      const got = await fetchShelf();
+      log(`  ${label} ${got.length} varer`);
+      shelf.push(...got);
+      shelfFetched.add(storeId);
+    } catch (err) {
+      errors.push(`${label}: ${err.message}`);
+      log(`  ${label} FEJL ${err.message}`);
+    }
   }
 
   const upsertStore = db.prepare(
@@ -99,7 +110,7 @@ export async function refreshWeek(db, {
       db.prepare(`DELETE FROM offers WHERE week = ? AND ${where}`).run(week, ...args);
     };
     for (const storeId of fetched) clear("store_id = ? AND kind != 'hylde'", storeId);
-    if (shelfOk) clear("kind = 'hylde'");
+    for (const storeId of shelfFetched) clear("store_id = ? AND kind = 'hylde'", storeId);
     db.prepare('DELETE FROM week_recipes WHERE week = ?').run(week);
     const counts = { tilbud: 0, fast: 0, hylde: 0 };
     for (const o of offers) {

@@ -61,8 +61,8 @@ web/
 |---|---|---|
 | `tilbud` | Ugens avis (gælder ≤ 14 dage) i dine butikker | "Netto · tilbud til fre. 30.10" |
 | `fast` | Langvarige katalogpriser i dine butikker (fx Lidls Madværket) | "Lidl · fast pris" |
-| `hylde` | REMA 1000's hyldepris fra deres webshop-API | "REMA 1000 · hyldepris" |
-| `reference` | REMA's hyldepris, når du ikke handler i REMA | "vejledende" + "ca." |
+| `hylde` | REMA 1000's og Lidls hyldepriser: hele REMA's sortiment fra deres webshop-API, og Lidls faste hverdagspriser fra lidl.dk (Hverdagsfavoritter og Madværket – kun ca. 40 varer, mest brød, pålæg og sild) | "REMA 1000 · hyldepris" |
+| `reference` | REMA's eller Lidls hyldepris, når du ikke handler i den kæde | "vejledende" + "ca." |
 | `estimate` | Eget skøn – kun hvis ingen rigtig pris findes | "anslået pris" + "ca." |
 
 Kun `tilbud` afgør, hvilke retter der kommer i bunken. Vejledende/anslåede beløb vises separat ("heraf ca. 113 kr …"), så brugeren ved præcis, hvad der er sikkert.
@@ -73,7 +73,7 @@ Kun `tilbud` afgør, hvilke retter der kommer i bunken. Vejledende/anslåede bel
 
 ## Datakilde – vigtigt
 
-Tilbuddene hentes fra Tjek's (eTilbudsavis') offentlige API uden nøgle, og hyldepriser fra REMA 1000's offentlige webshop-API. Det er fint til en prototype, men **ikke** til en app i drift: få en licens (Tjek sælger API-adgang) eller aftaler med kæderne, før appen udgives – eller brug PDF-avis-versionen. Kilden er isoleret i `server/src/sources/`, så den kan skiftes ud. Se [docs/kilder-pr-kaede.md](docs/kilder-pr-kaede.md) for hver kædes egne kilder.
+Tilbuddene hentes fra Tjek's (eTilbudsavis') offentlige API uden nøgle, og hyldepriser fra REMA 1000's offentlige webshop-API og Lidls produktsider på lidl.dk. Det er fint til en prototype, men **ikke** til en app i drift: få en licens (Tjek sælger API-adgang) eller aftaler med kæderne, før appen udgives – eller brug PDF-avis-versionen. Kilden er isoleret i `server/src/sources/`, så den kan skiftes ud. Se [docs/kilder-pr-kaede.md](docs/kilder-pr-kaede.md) for hver kædes egne kilder.
 
 ## Mambeno-analysen
 

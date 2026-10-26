@@ -4,6 +4,8 @@
 // normal  – [pack size in unit, kr] ≈ normal shelf price, used when nothing is on offer
 // gPerStk – grams per piece, lets us convert between weight offers and piece recipes
 // pcsAs   – how many recipe units one offer "piece" holds (a garlic head = 10 fed)
+// minAmount – smallest pack of the raw ingredient; smaller packs are pålæg or snacks
+//             ("Kyllingebryst 80 g" is sliced cold cuts, not chicken breast)
 // match   – regex run against the offer heading; not – regex that vetoes a match
 // staple  – basisvare: never priced unless the user turns it on for a recipe
 
@@ -26,57 +28,57 @@ export const CATEGORIES = {
 export const INGREDIENTS = {
   // Kød
   hakket_okse: {
-    name: 'hakket oksekød', unit: 'g', cat: 'kod', normal: [500, 45],
+    name: 'hakket oksekød', unit: 'g', cat: 'kod', normal: [500, 45], minAmount: 250,
     match: has('(hakket|hk\\.).{0,20}okse|oksefars|hakket kødkvæg'),
     not: has('pålæg|burger|bøf|kebab|lasagne|bolognese|frikadel|færdig')
   },
   hakket_svin: {
-    name: 'hakket svinekød', unit: 'g', cat: 'kod', normal: [500, 32],
+    name: 'hakket svinekød', unit: 'g', cat: 'kod', normal: [500, 32], minAmount: 250,
     match: has('(hakket|hk\\.).{0,20}(svine|grise)kød|svinefars'),
     not: has('kalv|okse|pålæg|færdig')
   },
   hakket_grisekalv: {
-    name: 'hakket grise- og kalvekød', unit: 'g', cat: 'kod', normal: [500, 38],
+    name: 'hakket grise- og kalvekød', unit: 'g', cat: 'kod', normal: [500, 38], minAmount: 250,
     match: has('(gris|grise|svine)-? ?(og|&|/) ?kalv|kalve?-? ?(og|&) ?(grise|svine|flæsk)|flæske?- og kalv|frikadellefars'),
     not: has('pålæg|færdig|frikadeller(?!fars)')
   },
   hakket_kylling: {
-    name: 'hakket kyllingekød', unit: 'g', cat: 'kod', normal: [400, 30],
+    name: 'hakket kyllingekød', unit: 'g', cat: 'kod', normal: [400, 30], minAmount: 250,
     match: has('(hakket|hk\\.).{0,20}kylling|kyllingefars'),
     not: has('pålæg|færdig')
   },
   kyllingebryst: {
-    name: 'kyllingebryst', unit: 'g', cat: 'kod', normal: [400, 40],
+    name: 'kyllingebryst', unit: 'g', cat: 'kod', normal: [400, 40], minAmount: 200,
     match: has('kyllingebryst|kyllingefilet|kyllingeinderfilet|inderfilet'),
     not: has('pålæg|skiver|nugget|paner|røget|kebab|salat|wings|spyd|tikka|grillet|stegt|med mozzarella|flødekartof')
   },
   kyllingelaar: {
-    name: 'kyllingelår', unit: 'g', cat: 'kod', normal: [1000, 45],
+    name: 'kyllingelår', unit: 'g', cat: 'kod', normal: [1000, 45], minAmount: 300,
     match: has('kylling.{0,10}(over|under)?lår|lårfilet|kyllingeoverlår|kyllingeunderlår|kyllingeben'),
     not: has('pålæg|paner|nugget|grillet|stegt|wings')
   },
   hel_kylling: {
-    name: 'hel kylling', unit: 'g', cat: 'kod', normal: [1400, 60],
+    name: 'hel kylling', unit: 'g', cat: 'kod', normal: [1400, 60], minAmount: 800,
     match: has('hel(e)? .{0,15}kylling|kylling,? hel'),
     not: has('grillet|grillkylling|stegt|pålæg|lår|bryst|vinger|hakket')
   },
   flaesk: {
-    name: 'flæsk i skiver', unit: 'g', cat: 'kod', normal: [500, 32],
+    name: 'flæsk i skiver', unit: 'g', cat: 'kod', normal: [500, 32], minAmount: 200,
     match: has('flæsk i skiver|stegeflæsk|flæskeskiver|skiveskåret.{0,10}flæsk|brystflæsk'),
     not: has('pålæg|sprødt|snack|chips')
   },
   koteletter: {
-    name: 'svinekoteletter', unit: 'g', cat: 'kod', normal: [1000, 60],
+    name: 'svinekoteletter', unit: 'g', cat: 'kod', normal: [1000, 60], minAmount: 250,
     match: has('kotelet'),
     not: has('lam|kalv|okse|røget|hamburgerryg')
   },
   svinemorbrad: {
-    name: 'svinemørbrad', unit: 'g', cat: 'kod', normal: [500, 55],
+    name: 'svinemørbrad', unit: 'g', cat: 'kod', normal: [500, 55], minAmount: 300,
     match: has('mørbrad'),
     not: has('okse|kalv|lam|bøf|pålæg|sauce|sovs|færdig|a la creme')
   },
   oksestrimler: {
-    name: 'oksekød i strimler', unit: 'g', cat: 'kod', normal: [400, 55],
+    name: 'oksekød i strimler', unit: 'g', cat: 'kod', normal: [400, 55], minAmount: 200,
     match: has('okse.{0,10}strimler|strimler.{0,10}okse|oksekød i strimler|wokstrimler af okse'),
     not: has('pålæg|færdig')
   },
@@ -86,24 +88,24 @@ export const INGREDIENTS = {
     not: has('chips|snack|ost|pålæg|dressing|bites|smagt|krydderi|kødpølse|med bacon|m/bacon')
   },
   polser: {
-    name: 'pølser', unit: 'g', cat: 'kod', normal: [500, 30],
+    name: 'pølser', unit: 'g', cat: 'kod', normal: [500, 30], minAmount: 200,
     match: has('pølser|wienerpølse|frankfurter|grillpølse|hotdogpølse|chorizopølse'),
     not: has('pålæg|cocktail|spege|salami|rulle|leverpostej|pølsebrød|pølsehorn|dyre|medister|mini')
   },
   medister: {
-    name: 'medisterpølse', unit: 'g', cat: 'kod', normal: [600, 40],
+    name: 'medisterpølse', unit: 'g', cat: 'kod', normal: [600, 40], minAmount: 250,
     match: has('medister'),
     not: has('pålæg|færdig|røget|sylte|blodpølse|salami')
   },
 
   // Fisk
   laks: {
-    name: 'laks', unit: 'g', cat: 'fisk', normal: [400, 70],
+    name: 'laks', unit: 'g', cat: 'fisk', normal: [400, 70], minAmount: 150,
     match: word('laks|laksefilet|lakseside|laksefileter|laksestykker|laksefars|laksebøf'),
     not: has('røget|gravad|pålæg|salat|sushi|paté|frikadel|smørepålæg|koldrøget|varmrøget|rogn|snack|kats?emad|hunde|indbagt|fars|røræg|asparges|rossini|i citron')
   },
   hvid_fisk: {
-    name: 'torsk eller anden hvid fisk', unit: 'g', cat: 'fisk', normal: [400, 55],
+    name: 'torsk eller anden hvid fisk', unit: 'g', cat: 'fisk', normal: [400, 55], minAmount: 150,
     match: has('torsk|(?<![a-zæøå])sej(filet|fileter)?(?![a-zæøå])|kuller|rødspætte|fiskefilet|pangasius|kulmule|hvid fisk'),
     not: has('paner|røget|rogn|lever|frikadel|fiskepinde|pålæg|tempura|gratin|fars|frit|indbagt')
   },

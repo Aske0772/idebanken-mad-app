@@ -62,6 +62,7 @@ export function matchOffer(offer, { shelf = false } = {}) {
       assumed = true;
     }
     if (!(amount > 0)) continue;
+    if (ing.minAmount && amount < ing.minAmount) continue;
     const ratio = offer.price / amount / (ing.normal[1] / ing.normal[0]);
     if (ratio < minRatio || ratio > maxRatio) continue;
     matches.push({ ingredientId: id, amount: round(amount), assumed });
