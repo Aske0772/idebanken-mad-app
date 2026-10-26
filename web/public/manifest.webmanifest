@@ -1,0 +1,10 @@
+{
+  "name": "Mæt – ugens mad fra tilbudsaviserne",
+  "short_name": "Mæt",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F5F3EE",
+  "theme_color": "#F5F3EE",
+  "lang": "da",
+  "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}

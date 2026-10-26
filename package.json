@@ -1,0 +1,17 @@
+{
+  "name": "idebanken-mad-app",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Swipe dig til ugens aftensmad – bygget på alle ugens tilbudsaviser.",
+  "scripts": {
+    "setup": "npm install && cd server && npm install && cd ../web && npm install",
+    "dev": "concurrently -n server,web -c green,magenta \"npm run dev --prefix server\" \"npm run dev --prefix web\"",
+    "refresh": "npm run refresh --prefix server",
+    "test": "npm test --prefix server && npm test --prefix web",
+    "build": "npm run build --prefix web",
+    "start": "npm start --prefix server"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}

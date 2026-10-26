@@ -1,0 +1,89 @@
+# Mæt.
+
+Swipe dig til ugens aftensmad – bygget på **alle** ugens tilbudsaviser.
+
+1. Appen henter tilbudsaviserne fra 15 kæder og finder de madvarer, der kan bruges i opskrifter.
+2. Den udregner, hvilke retter man kan lave af ugens tilbud, og gemmer dem i ugens database.
+3. Du vælger dine butikker og swiper: højre = vil have, venstre = næste.
+4. Vælg antal dage og personer → se prisen i alt og **pr. person pr. måltid**. Basisvarer (salt, peber, olie …) er ikke med, men kan slås til.
+5. Ugen samles til én indkøbsliste, grupperet pr. butik.
+
+Arbejdstitel: "Mæt". Navnet står i `web/index.html`, `web/public/manifest.webmanifest` og som `.brand` i komponenterne.
+
+## Kom i gang
+
+Kræver Node 22.5+ (bruger den indbyggede `node:sqlite`).
+
+```bash
+npm run setup
+```
+
+```bash
+npm run dev
+```
+
+Åbn http://localhost:5173 – gerne i mobilvisning. Første gang henter serveren ugens tilbudsaviser (ca. 30–60 sek).
+
+| Kommando | Hvad |
+|---|---|
+| `npm run dev` | API (port 8787) + web (port 5173) |
+| `npm run refresh` | Hent tilbudsaviser og genberegn ugens retter |
+| `npm test` | Server- og pristests |
+| `npm run build && npm start` | Produktionsbuild serveret af API'et på port 8787 |
+
+Miljøvariabler: `API_PORT` (8787), `LAT`/`LNG` (standard: København) til tilbud for et område, `DB_FILE`.
+
+## Sådan hænger det sammen
+
+```
+server/
+  src/sources/tjek.js   henter tilbud (eTilbudsavis' offentlige API)
+  src/ingredients.js    ~70 ingredienser: enhed, normalpris, regex til at genkende tilbud
+  src/match.js          tilbud → ingrediens, inkl. enhedsomregning (kg ↔ stk) og prisfornuftstjek
+  src/recipes.js        34 egne opskrifter med "hero"-ingredienser
+  src/week.js           ugens snapshot: tilbud, matches og retter → SQLite
+  src/index.js          GET /api/week, POST /api/refresh, /images
+web/
+  src/lib/pricing.js    al prisberegning (hele pakker, billigste butik, delte varer)
+  src/components/       Onboarding, SwipeView, DishSheet, WeekView, ListView
+```
+
+**Hvilke retter vises?** En ret kommer i bunken, når mindst én af dens hero-ingredienser (fx kyllingebryst i kylling i karry) er på tilbud i en af dine butikker. Bunken sorteres efter pris pr. portion.
+
+**Hvordan regnes prisen?** For hver ingrediens: mængde × personer × dage ÷ opskriftens portioner, altid købt i hele pakker. På indkøbslisten lægges mængderne sammen på tværs af retter, så to retter med løg deler ét net.
+
+**Hvor kommer priserne fra?** Kun priser, der gælder lige nu (startet og ikke udløbet), bruges. I prioriteret rækkefølge:
+
+| Kilde | Hvad | Vises som |
+|---|---|---|
+| `tilbud` | Ugens avis (gælder ≤ 14 dage) i dine butikker | "Netto · tilbud til fre. 30.10" |
+| `fast` | Langvarige katalogpriser i dine butikker (fx Lidls Madværket) | "Lidl · fast pris" |
+| `hylde` | REMA 1000's hyldepris fra deres webshop-API | "REMA 1000 · hyldepris" |
+| `reference` | REMA's hyldepris, når du ikke handler i REMA | "vejledende" + "ca." |
+| `estimate` | Eget skøn – kun hvis ingen rigtig pris findes | "anslået pris" + "ca." |
+
+Kun `tilbud` afgør, hvilke retter der kommer i bunken. Vejledende/anslåede beløb vises separat ("heraf ca. 113 kr …"), så brugeren ved præcis, hvad der er sikkert.
+
+**Friskhed:** serveren henter alt igen, når data er over 6 timer gammelt (`REFRESH_HOURS`), og tjekker hver time. Appen henter nye priser, når den åbnes igen, og hvert 15. minut. "Priser opdateret i dag kl. 10.35" står på uge- og indkøbssiden.
+
+**Billeder:** Læg `<opskrift-id>.jpg|webp|png` i `server/data/images/`, så bruges de automatisk. Indtil da tegner appen en farvet tallerken pr. ret.
+
+## Datakilde – vigtigt
+
+Tilbuddene hentes fra Tjek's (eTilbudsavis') offentlige API uden nøgle, og hyldepriser fra REMA 1000's offentlige webshop-API. Det er fint til en prototype, men **ikke** til en app i drift: få en licens (Tjek sælger API-adgang) eller aftaler med kæderne, før appen udgives. Kilden er isoleret i `server/src/sources/`, så den kan skiftes ud.
+
+## Mambeno-analysen
+
+Se [docs/mambeno-analyse.md](docs/mambeno-analyse.md): hvad REA fandt på mambeno.dk, hvilke features vi tog med, og hvad vi gør anderledes.
+
+## Til native app
+
+Web-appen er bygget mobil-først, så den kan pakkes med [Capacitor](https://capacitorjs.com) uden omskrivning: `npm i @capacitor/core @capacitor/cli`, `npx cap init`, `npx cap add ios android`, og peg `webDir` på `web/dist`. API'et skal så køre på en server.
+
+## Næste skridt
+
+- Flere opskrifter (eller AI-genererede ud fra ugens tilbud)
+- Rigtige billeder pr. ret
+- Brugerkonti og deling af indkøbsliste i familien
+- Madpakker, tilbagevendende varer, print af ugeplan
+- Ugentlig automatisk opdatering (cron) i stedet for ved første kald
