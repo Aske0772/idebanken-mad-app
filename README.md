@@ -71,7 +71,7 @@ Kun `tilbud` afgør, hvilke retter der kommer i bunken. Vejledende/anslåede bel
 
 **Billeder:** Læg `<opskrift-id>.jpg|webp|png` i `server/data/images/`, så bruges de automatisk. Indtil da tegner appen en farvet tallerken pr. ret. Prompts til AI-genererede close-up-fotos (Nano Banana Pro via Figma Weave) ligger i `server/data/image-prompts.json`.
 
-**Kort og detaljer:** Swipe-kortet viser kun det, der afgør et swipe: foto, titel, tid, pris pr. portion og ugens tilbud. Ⓘ eller et tryk på kortet åbner detaljevisningen med dage/personer, pris, basisvarer og fanerne Ingredienser og Opskrift. Hjertet gemmer retten under fanen "Gemte".
+**Kort og detaljer:** Swipe-kortet viser kun det, der afgør et swipe: foto, titel, tid, pris pr. portion og ugens tilbud. Et tryk på kortet åbner detaljevisningen med dage/personer, pris, basisvarer og fanerne Ingredienser og Opskrift. Hjertet gemmer retten under fanen "Gemte". "Erstat" lader den nye ret tage pladsen for en ret i ugen (den overtager dens dage og personer, og den gamle kommer tilbage i bunken); når ugen ville gå over 7 aftener, er "Erstat en ret" hovedknappen.
 
 ## Datakilde – vigtigt
 

@@ -17,18 +17,37 @@ const groupByCategory = (lines) =>
 
 // Full-screen dish view: the photo fills the screen and a frosted glass panel
 // holds everything about the dish. mode: 'add' (from the deck) or 'edit' (from the week).
-export function DishDetail({ data, recipe, item, mode, prefs, saved, onToggleSave, onConfirm, onRemove, onClose }) {
+export function DishDetail({ data, recipe, item, mode, prefs, plan, saved, onToggleSave, onConfirm, onReplace, onRemove, onClose }) {
   const [days, setDays] = useState(item?.days ?? 1);
   const [people, setPeople] = useState(item?.people ?? prefs.people);
   const [staples, setStaples] = useState(item?.staples ?? []);
   const [tab, setTab] = useState('ingredienser');
+  const [picking, setPicking] = useState(false);
   const closeRef = useRef(null);
+  const pickingRef = useRef(false);
+  pickingRef.current = picking;
+  // The button that opened the picker. The rest of the view is inert while the
+  // picker is open, so focus goes back here once it closes.
+  const pickerOpener = useRef(null);
+  const openPicker = (e) => {
+    pickerOpener.current = e.currentTarget;
+    setPicking(true);
+  };
+
+  useEffect(() => {
+    if (!picking) pickerOpener.current?.focus();
+  }, [picking]);
   const storesById = useMemo(() => Object.fromEntries(data.stores.map((s) => [s.id, s])), [data]);
 
   useEffect(() => {
     const opener = document.activeElement;
     closeRef.current?.focus();
-    const onKey = (e) => e.key === 'Escape' && onClose();
+    // Escape closes the replace picker first, then the dish.
+    const onKey = (e) => {
+      if (e.key !== 'Escape') return;
+      if (pickingRef.current) setPicking(false);
+      else onClose();
+    };
     window.addEventListener('keydown', onKey);
     return () => {
       window.removeEventListener('keydown', onKey);
@@ -41,11 +60,18 @@ export function DishDetail({ data, recipe, item, mode, prefs, saved, onToggleSav
   const bought = price.lines.filter((l) => !l.staple);
   const stapleLines = price.lines.filter((l) => l.staple);
   const toggleStaple = (id) => setStaples((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));
+  const add = () => onConfirm({ days, people, staples });
+
+  // A new dish can take the place of one already in the week. When adding it
+  // would go past 7 evenings, replacing becomes the main action.
+  const plannedDays = plan.reduce((n, p) => n + p.days, 0);
+  const canReplace = mode === 'add' && plan.length > 0;
+  const full = canReplace && plannedDays + days > 7;
 
   return (
     <div className="detail" role="dialog" aria-modal="true" aria-label={recipe.title}>
       <DishArt recipe={recipe} className="detail-photo" />
-      <div className="detail-bar">
+      <div className="detail-bar" inert={picking ? '' : undefined}>
         <button ref={closeRef} type="button" className="glass-btn" aria-label="Luk" onClick={onClose}>
           <X size={20} />
         </button>
@@ -57,7 +83,7 @@ export function DishDetail({ data, recipe, item, mode, prefs, saved, onToggleSav
         </button>
       </div>
 
-      <div className="glass-panel">
+      <div className="glass-panel" inert={picking ? '' : undefined}>
         <h2 className="detail-title">{recipe.title}</h2>
         <p className="detail-blurb">{recipe.blurb}</p>
         <div className="detail-chips">
@@ -141,13 +167,77 @@ export function DishDetail({ data, recipe, item, mode, prefs, saved, onToggleSav
         )}
       </div>
 
-      <div className="detail-actions">
+      <div className="detail-actions" inert={picking ? '' : undefined}>
+        {full && <p className="detail-hint">Ugen er fyldt · {plannedDays} af 7 aftener</p>}
         {mode === 'edit' && (
           <button type="button" className="glass-btn wide-text" onClick={onRemove}>Fjern</button>
         )}
-        <button type="button" className="primary wide" onClick={() => onConfirm({ days, people, staples })}>
-          {mode === 'edit' ? 'Gem ændringer' : 'Tilføj til ugen'} · {kr(price.total)}
+        {canReplace && (
+          <button type="button" className="glass-btn wide-text" onClick={full ? add : openPicker}>
+            {full ? 'Tilføj' : 'Erstat'}
+          </button>
+        )}
+        <button type="button" className="primary wide" onClick={full ? openPicker : add}>
+          {full ? 'Erstat en ret' : `${mode === 'edit' ? 'Gem ændringer' : 'Tilføj til ugen'} · ${kr(price.total)}`}
         </button>
+      </div>
+
+      {picking && (
+        <ReplacePicker
+          data={data} recipe={recipe} plan={plan} prefs={prefs} staples={staples}
+          onPick={(old) => onReplace(old, { staples })} onCancel={() => setPicking(false)}
+        />
+      )}
+    </div>
+  );
+}
+
+// Choose which dish in the week the new one replaces. The new dish takes over
+// that dish's days and people, so the week keeps its length.
+function ReplacePicker({ data, recipe, plan, prefs, staples, onPick, onCancel }) {
+  const recipes = useMemo(() => Object.fromEntries(data.recipes.map((r) => [r.id, r])), [data]);
+  const listRef = useRef(null);
+  const opts = { atHome: prefs.atHome, stores: prefs.stores };
+
+  useEffect(() => {
+    listRef.current?.querySelector('button')?.focus();
+  }, []);
+
+  return (
+    <div className="replace-backdrop" onClick={onCancel}>
+      <div
+        className="replace-sheet" role="dialog" aria-modal="true" aria-label="Erstat en ret"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h3 className="replace-title">Hvilken ret skal ud?</h3>
+        <p className="replace-sub">{recipe.title} overtager dens dage og personer.</p>
+        <ul className="week-list" ref={listRef}>
+          {plan.map((item) => {
+            const old = recipes[item.recipeId];
+            if (!old) return null;
+            const before = priceDish(data, old, { ...item, ...opts }).total;
+            const after = priceDish(data, recipe, { days: item.days, people: item.people, staples, ...opts }).total;
+            const diff = Math.round(after - before);
+            return (
+              <li key={item.id}>
+                <button type="button" className="week-item" onClick={() => onPick(item)}>
+                  <DishArt recipe={old} className="week-bg" />
+                  <span className="week-shade" aria-hidden="true" />
+                  <span className="week-text">
+                    <span className="week-title">{old.title}</span>
+                    <span className="muted small">
+                      {item.days} {item.days === 1 ? 'dag' : 'dage'} · {item.people} pers.
+                    </span>
+                  </span>
+                  <span className={`replace-diff ${diff < 0 ? 'is-cheaper' : ''}`}>
+                    {diff === 0 ? 'Samme pris' : `${kr(Math.abs(diff))} ${diff < 0 ? 'billigere' : 'dyrere'}`}
+                  </span>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+        <button type="button" className="glass-btn wide-text replace-cancel" onClick={onCancel}>Annuller</button>
       </div>
     </div>
   );

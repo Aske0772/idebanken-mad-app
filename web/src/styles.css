@@ -308,11 +308,38 @@ ul, ol { margin: 0; padding: 0; }
 .detail-steps { padding-left: 22px; display: flex; flex-direction: column; gap: 12px; font-size: 15px; line-height: 1.5; }
 .detail-steps li::marker { font-family: var(--display); font-weight: 800; color: var(--accent); }
 .detail-actions {
-  position: sticky; bottom: 0; z-index: 2; display: flex; gap: 10px;
+  position: sticky; bottom: 0; z-index: 2; display: flex; flex-wrap: wrap; gap: 10px;
   padding: 18px 12px calc(14px + env(safe-area-inset-bottom));
   background: linear-gradient(rgba(20, 19, 16, 0), rgba(20, 19, 16, 0.92) 45%);
 }
 .detail .primary { background: var(--accent); color: var(--accent-ink); }
+.detail-actions .primary { flex: 1 1 0; }
+.detail-hint { flex-basis: 100%; text-align: center; font-size: 13px; font-weight: 600; opacity: 0.85; }
+
+/* Replace picker: glass sheet over the dish with the week's dishes as photo rows */
+.replace-backdrop {
+  position: fixed; inset: 0; z-index: 30; max-width: 480px; margin: 0 auto;
+  display: flex; align-items: flex-end; background: rgba(0, 0, 0, 0.35); animation: fade 0.18s ease;
+}
+.replace-sheet {
+  width: 100%; max-height: 82dvh; overflow-y: auto; display: flex; flex-direction: column; gap: 12px;
+  padding: 22px 14px calc(16px + env(safe-area-inset-bottom)); border-radius: 28px 28px 0 0;
+  background: var(--glass-strong); border: 1px solid var(--glass-border); border-bottom: 0;
+  backdrop-filter: blur(24px) saturate(150%); -webkit-backdrop-filter: blur(24px) saturate(150%);
+  animation: rise 0.24s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.replace-title { font-family: var(--display); font-size: 24px; font-weight: 750; padding: 0 4px; }
+.replace-sub { margin-top: -6px; padding: 0 4px; font-size: 14px; opacity: 0.8; }
+.replace-diff {
+  position: relative; flex: none; padding: 5px 10px; border-radius: 999px; font-size: 13px; font-weight: 650;
+  background: rgba(20, 19, 16, 0.62); border: 1px solid var(--glass-border);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+}
+.replace-diff.is-cheaper { color: #ffc27a; }
+.replace-cancel { width: 100%; }
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .replace-sheet { background: rgba(24, 22, 18, 0.94); }
+}
 
 /* Week */
 .week-bar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
@@ -383,5 +410,5 @@ ul, ol { margin: 0; padding: 0; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
 @media (prefers-reduced-motion: reduce) {
-  .card, .sheet, .sheet-backdrop { transition: none; animation: none; }
+  .card, .sheet, .sheet-backdrop, .replace-backdrop, .replace-sheet { transition: none; animation: none; }
 }

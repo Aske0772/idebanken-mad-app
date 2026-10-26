@@ -94,6 +94,17 @@ export default function App() {
     setSheet(null);
   };
 
+  // The new dish takes the old one's place, days and people; the old one goes back in the deck.
+  const replace = (old, { staples }) => {
+    const { recipe } = sheet;
+    setState((s) => {
+      const plan = s.plan.map((p) => (p.id === old.id ? { ...p, id: crypto.randomUUID(), recipeId: recipe.id, staples } : p));
+      const seen = s.seen.filter((x) => x !== old.recipeId);
+      return { ...s, plan, seen: seen.includes(recipe.id) ? seen : [...seen, recipe.id] };
+    });
+    setSheet(null);
+  };
+
   const remove = () => {
     const { item, recipe } = sheet;
     setState((s) => ({ ...s, plan: s.plan.filter((p) => p.id !== item.id), seen: s.seen.filter((x) => x !== recipe.id) }));
@@ -163,10 +174,10 @@ export default function App() {
       {sheet && (
         <DishDetail
           key={sheet.recipe.id + (sheet.item?.id ?? '')}
-          data={data} recipe={sheet.recipe} item={sheet.item} mode={sheet.mode} prefs={prefs}
+          data={data} recipe={sheet.recipe} item={sheet.item} mode={sheet.mode} prefs={prefs} plan={state.plan}
           saved={prefs.saved.includes(sheet.recipe.id)}
           onToggleSave={() => setPrefs((p) => ({ ...p, saved: toggleIn(p.saved, sheet.recipe.id) }))}
-          onConfirm={confirm} onRemove={remove} onClose={closeSheet}
+          onConfirm={confirm} onReplace={replace} onRemove={remove} onClose={closeSheet}
         />
       )}
 
