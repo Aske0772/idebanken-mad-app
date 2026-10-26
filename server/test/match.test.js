@@ -34,7 +34,9 @@ const negatives = [
   'Sylte, blodpølse eller røget medister',
   'CHEF SELECT Baguetter med smør',
   'Egelykke paté med champignon/grønne peberkorn',
-  'Samyang nudler'
+  'Samyang nudler',
+  'Ris cuisine',
+  'RiceUp! zero sugar risbar'
 ];
 
 for (const heading of negatives) {

@@ -1,6 +1,9 @@
-# Mæt.
+# Mæt. – MVP (scrape-versionen)
 
 Swipe dig til ugens aftensmad – bygget på **alle** ugens tilbudsaviser.
+
+> **Denne version** henter alle kæders tilbud via Tjek/eTilbudsavis' API og REMA's webshop-API – bedste dækning og præcise priser, til test og demo.
+> Versionen, der læser kædernes egne avis-PDF'er (tænkt til lancering), ligger i repoet [idebanken-mad-app-pdf-aviser](https://github.com/Aske0772/idebanken-mad-app-pdf-aviser).
 
 1. Appen henter tilbudsaviserne fra 15 kæder og finder de madvarer, der kan bruges i opskrifter.
 2. Den udregner, hvilke retter man kan lave af ugens tilbud, og gemmer dem i ugens database.
@@ -70,7 +73,7 @@ Kun `tilbud` afgør, hvilke retter der kommer i bunken. Vejledende/anslåede bel
 
 ## Datakilde – vigtigt
 
-Tilbuddene hentes fra Tjek's (eTilbudsavis') offentlige API uden nøgle, og hyldepriser fra REMA 1000's offentlige webshop-API. Det er fint til en prototype, men **ikke** til en app i drift: få en licens (Tjek sælger API-adgang) eller aftaler med kæderne, før appen udgives. Kilden er isoleret i `server/src/sources/`, så den kan skiftes ud.
+Tilbuddene hentes fra Tjek's (eTilbudsavis') offentlige API uden nøgle, og hyldepriser fra REMA 1000's offentlige webshop-API. Det er fint til en prototype, men **ikke** til en app i drift: få en licens (Tjek sælger API-adgang) eller aftaler med kæderne, før appen udgives – eller brug PDF-avis-versionen. Kilden er isoleret i `server/src/sources/`, så den kan skiftes ud. Se [docs/kilder-pr-kaede.md](docs/kilder-pr-kaede.md) for hver kædes egne kilder.
 
 ## Mambeno-analysen
 

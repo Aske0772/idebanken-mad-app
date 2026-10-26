@@ -74,6 +74,20 @@ test('every recipe is sent so planned dishes can still be priced', async () => {
   assert.ok(payload.recipes.some((r) => r.id === 'carbonara' && !r.inWeek));
 });
 
+test('a store that fails keeps its last good offers', async () => {
+  const db = openDb(':memory:');
+  await refresh(db);
+  await refresh(db, {
+    fetchOffers: async (id) => {
+      if (id === '9ba51') throw new Error('netto.dk nede');
+      return FAKE[id] ?? [];
+    }
+  });
+  const payload = weekPayload(db, weekKey());
+  assert.equal(payload.offers.kyllingebryst[0].store, '9ba51');
+  assert.match(payload.errors.join(), /netto.dk nede/);
+});
+
 test('a failing shelf source does not stop the refresh', async () => {
   const db = openDb(':memory:');
   await refresh(db, { fetchShelf: async () => { throw new Error('offline'); } });

@@ -38,7 +38,7 @@ const location = () => ({
 });
 
 // Scrape every store's avis plus REMA's shelf prices, match them to ingredients
-// and store the week's dishes.
+// and store the week's dishes. A store that fails keeps its last good offers.
 export async function refreshWeek(db, {
   fetchOffers = fetchDealerOffers,
   fetchShelf = fetchRemaShelf,
@@ -47,11 +47,13 @@ export async function refreshWeek(db, {
   const week = weekKey();
   const errors = [];
   const offers = [];
+  const fetched = new Set();
   for (const store of STORES) {
     try {
       const got = await fetchOffers(store.id, location());
       log(`  ${store.name.padEnd(14)} ${got.length} tilbud`);
       offers.push(...got);
+      fetched.add(store.id);
     } catch (err) {
       errors.push(`${store.name}: ${err.message}`);
       log(`  ${store.name.padEnd(14)} FEJL ${err.message}`);
@@ -60,8 +62,10 @@ export async function refreshWeek(db, {
   if (offers.length === 0) throw new Error(`Ingen tilbud hentet. ${errors.join('; ')}`);
 
   let shelf = [];
+  let shelfOk = false;
   try {
     shelf = await fetchShelf();
+    shelfOk = true;
     log(`  REMA hyldepriser ${shelf.length} varer`);
   } catch (err) {
     errors.push(`REMA hyldepriser: ${err.message}`);
@@ -88,9 +92,15 @@ export async function refreshWeek(db, {
   db.exec('BEGIN');
   try {
     for (const s of STORES) upsertStore.run(s.id, s.slug, s.name, s.color);
-    for (const t of ['offers', 'offer_matches', 'week_recipes']) {
-      db.prepare(`DELETE FROM ${t} WHERE week = ?`).run(week);
-    }
+    // Replace only what was fetched successfully this time.
+    const clear = (where, ...args) => {
+      db.prepare(`DELETE FROM offer_matches WHERE week = ? AND offer_id IN (SELECT id FROM offers WHERE week = ? AND ${where})`)
+        .run(week, week, ...args);
+      db.prepare(`DELETE FROM offers WHERE week = ? AND ${where}`).run(week, ...args);
+    };
+    for (const storeId of fetched) clear("store_id = ? AND kind != 'hylde'", storeId);
+    if (shelfOk) clear("kind = 'hylde'");
+    db.prepare('DELETE FROM week_recipes WHERE week = ?').run(week);
     const counts = { tilbud: 0, fast: 0, hylde: 0 };
     for (const o of offers) {
       const matches = matchOffer(o);

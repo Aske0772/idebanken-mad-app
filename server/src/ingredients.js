@@ -341,7 +341,7 @@ export const INGREDIENTS = {
   ris: {
     name: 'ris', unit: 'g', cat: 'kolonial', normal: [1000, 18],
     match: has('(?<![a-zæøå])ris(?![a-zæøå])|jasminris|basmatiris|parboiled|fuldkornsris|langkornet|risottoris'),
-    not: has('risalamande|riskiks|à la|grød|blomkål|broccoli|papir|nudler|mel|chips|mælk|drik|kager|kiks|snack|vafler|crisp')
+    not: has('risalamande|riskiks|à la|grød|blomkål|broccoli|papir|nudler|mel|chips|mælk|drik|kager|kiks|snack|vafler|crisp|cuisine|creme|risbar|riceup')
   },
   pasta: {
     name: 'pasta', unit: 'g', cat: 'kolonial', normal: [500, 12],
