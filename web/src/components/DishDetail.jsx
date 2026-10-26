@@ -16,10 +16,15 @@ export function DishDetail({ data, recipe, item, mode, prefs, saved, onToggleSav
   const storesById = useMemo(() => Object.fromEntries(data.stores.map((s) => [s.id, s])), [data]);
 
   useEffect(() => {
+    const opener = document.activeElement;
     closeRef.current?.focus();
     const onKey = (e) => e.key === 'Escape' && onClose();
     window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      // Give focus back to whatever opened the view (the card or a week row).
+      if (opener?.isConnected) opener.focus();
+    };
   }, [onClose]);
 
   const price = priceDish(data, recipe, { people, days, staples, atHome: prefs.atHome, stores: prefs.stores });

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { DishArt } from './ui.jsx';
-import { X, Plus, Undo, Store, Info } from './icons.jsx';
+import { X, Plus, Undo, Store } from './icons.jsx';
 import { heroOffers, portionPrice } from '../lib/pricing.js';
 import { krSmall } from '../lib/format.js';
 
@@ -99,6 +99,7 @@ export function SwipeView({ data, prefs, setPrefs, seen, onSkip, onLike, onUndo,
           return (
             <SwipeCard
               key={item.recipe.id}
+              title={item.recipe.title}
               depth={depth}
               fling={fling?.id === item.recipe.id ? fling.dir : 0}
               onSwiped={(dir) => done(item.recipe, dir)}
@@ -107,16 +108,8 @@ export function SwipeView({ data, prefs, setPrefs, seen, onSkip, onLike, onUndo,
               <DishArt recipe={item.recipe} className="card-photo" />
               <div className="card-shade" aria-hidden="true" />
               <div className="card-top">
-                <div>
-                  <h2 className="card-title">{item.recipe.title}</h2>
-                  <p className="card-sub">{item.recipe.minutes} min · {DIET_LABEL[item.recipe.diet]}</p>
-                </div>
-                <button
-                  type="button" className="glass-btn" aria-label={`Se ingredienser og opskrift for ${item.recipe.title}`}
-                  onPointerDown={(e) => e.stopPropagation()} onClick={() => onOpen(item.recipe)}
-                >
-                  <Info size={20} />
-                </button>
+                <h2 className="card-title">{item.recipe.title}</h2>
+                <p className="card-sub">{item.recipe.minutes} min · {DIET_LABEL[item.recipe.diet]}</p>
               </div>
               <div className="card-bottom">
                 <div className="card-price">
@@ -126,7 +119,6 @@ export function SwipeView({ data, prefs, setPrefs, seen, onSkip, onLike, onUndo,
                   {item.heroes.length === 0 && <span className="glass-chip">Ikke på tilbud denne uge</span>}
                   {uniqueHeroes(item.heroes).slice(0, 2).map(({ ingredientId, offer }) => (
                     <span className="glass-chip" key={ingredientId}>
-                      <span className="store-dot" style={{ background: storesById[offer.store]?.color }} />
                       {data.ingredients[ingredientId].name} {krSmall(offer.price)} · {storesById[offer.store]?.name}
                     </span>
                   ))}
@@ -166,7 +158,7 @@ function uniqueHeroes(heroes) {
 
 const THRESHOLD = 110;
 
-function SwipeCard({ children, depth, fling, onSwiped, onTap }) {
+function SwipeCard({ children, title, depth, fling, onSwiped, onTap }) {
   const [drag, setDrag] = useState({ x: 0, y: 0 });
   const [leaving, setLeaving] = useState(0);
   const start = useRef(null);
@@ -229,6 +221,11 @@ function SwipeCard({ children, depth, fling, onSwiped, onTap }) {
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
       onPointerCancel={onPointerUp}
+      // Tap opens the dish; on a keyboard the focused top card opens with Enter.
+      role={isTop ? 'button' : undefined}
+      tabIndex={isTop ? 0 : -1}
+      aria-label={isTop ? `${title} – se ingredienser og opskrift` : undefined}
+      onKeyDown={(e) => isTop && (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), onTap())}
       aria-hidden={!isTop}
       inert={isTop ? undefined : ''}
     >
