@@ -1,4 +1,3 @@
-import { StoreDot } from './ui.jsx';
 import { Check } from './icons.jsx';
 
 export function StorePicker({ stores, selected, onChange }) {
@@ -13,9 +12,9 @@ export function StorePicker({ stores, selected, onChange }) {
             key={s.id} type="button" className={`store-chip ${on ? 'is-on' : ''}`}
             aria-pressed={on} onClick={() => toggle(s.id)}
           >
-            <StoreDot color={s.color} />
             <span className="store-chip-name">{s.name}</span>
-            <span className="store-chip-count">{on ? <Check size={16} /> : s.offerCount}</span>
+            <span className="store-chip-count">{s.offerCount} tilbud</span>
+            <span className="store-chip-check" aria-hidden="true">{on && <Check size={14} />}</span>
           </button>
         );
       })}
