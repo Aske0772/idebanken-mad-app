@@ -4,14 +4,14 @@ import { usePersistent } from './lib/persist.js';
 import { shoppingList } from './lib/pricing.js';
 import { Onboarding } from './components/Onboarding.jsx';
 import { SwipeView } from './components/SwipeView.jsx';
-import { DishSheet } from './components/DishSheet.jsx';
+import { DishDetail } from './components/DishDetail.jsx';
 import { WeekView } from './components/WeekView.jsx';
 import { ListView } from './components/ListView.jsx';
 import { StorePicker } from './components/StorePicker.jsx';
 import { Sheet, Stepper } from './components/ui.jsx';
 import { Cards, Calendar, List } from './components/icons.jsx';
 
-const PREFS = { onboarded: false, stores: [], people: 2, diet: 'alle', quick: false, atHome: [] };
+const PREFS = { onboarded: false, stores: [], people: 2, diet: 'alle', atHome: [], saved: [] };
 // Weekly state is tagged with the ISO week and starts fresh when the avis changes.
 const WEEK = { week: null, plan: [], seen: [], checked: [] };
 
@@ -161,9 +161,11 @@ export default function App() {
       </nav>
 
       {sheet && (
-        <DishSheet
+        <DishDetail
           key={sheet.recipe.id + (sheet.item?.id ?? '')}
           data={data} recipe={sheet.recipe} item={sheet.item} mode={sheet.mode} prefs={prefs}
+          saved={prefs.saved.includes(sheet.recipe.id)}
+          onToggleSave={() => setPrefs((p) => ({ ...p, saved: toggleIn(p.saved, sheet.recipe.id) }))}
           onConfirm={confirm} onRemove={remove} onClose={closeSheet}
         />
       )}

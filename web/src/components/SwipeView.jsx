@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { DishArt } from './ui.jsx';
-import { X, Heart, Undo, Clock, Store } from './icons.jsx';
+import { X, Plus, Undo, Store, Info } from './icons.jsx';
 import { heroOffers, portionPrice } from '../lib/pricing.js';
 import { krSmall } from '../lib/format.js';
 
@@ -8,30 +8,44 @@ const FILTERS = [
   { id: 'alle', label: 'Alle' },
   { id: 'kod', label: 'Kød' },
   { id: 'fisk', label: 'Fisk' },
-  { id: 'vegetar', label: 'Vegetar' }
+  { id: 'vegetar', label: 'Vegetar' },
+  { id: 'hurtig', label: 'Hurtig' },
+  { id: 'gemte', label: 'Gemte' }
 ];
+
+export const DIET_LABEL = { kod: 'Kød', fisk: 'Fisk', vegetar: 'Vegetar' };
+
+const passes = (filter, recipe, saved) => {
+  if (filter === 'hurtig') return recipe.minutes <= 30;
+  if (filter === 'gemte') return saved.includes(recipe.id);
+  return filter === 'alle' || recipe.diet === filter;
+};
 
 export function SwipeView({ data, prefs, setPrefs, seen, onSkip, onLike, onUndo, canUndo, onOpen, onStores, onReset }) {
   const storesById = useMemo(() => Object.fromEntries(data.stores.map((s) => [s.id, s])), [data]);
+  const filter = FILTERS.some((f) => f.id === prefs.diet) ? prefs.diet : 'alle';
+  const saved = prefs.saved ?? [];
 
   // This week's deck: dishes with a hero ingredient on offer in the chosen stores,
-  // cheapest portion first.
+  // cheapest portion first. Saved dishes show up under "Gemte" even without an offer.
   const deck = useMemo(() => {
     return data.recipes
-      .filter((r) => !seen.includes(r.id))
-      .filter((r) => prefs.diet === 'alle' || r.diet === prefs.diet)
-      .filter((r) => !prefs.quick || r.minutes <= 30)
-      .map((r) => ({ recipe: r, heroes: heroOffers(data, r, prefs.stores), price: portionPrice(data, r, prefs.stores, prefs.people) }))
-      .filter((x) => x.heroes.length > 0)
+      .filter((r) => !seen.includes(r.id) && passes(filter, r, saved))
+      .map((r) => ({
+        recipe: r,
+        heroes: heroOffers(data, r, prefs.stores),
+        price: portionPrice(data, r, prefs.stores, prefs.people, prefs.atHome)
+      }))
+      .filter((x) => filter === 'gemte' || x.heroes.length > 0)
       .sort((a, b) => a.price - b.price);
-  }, [data, prefs, seen]);
+  }, [data, prefs.stores, prefs.people, prefs.atHome, filter, saved, seen]);
 
   const [fling, setFling] = useState(null);
   const top = deck[0];
 
   useEffect(() => {
     const onKey = (e) => {
-      if (!top || document.querySelector('.sheet')) return;
+      if (!top || document.querySelector('[role="dialog"]')) return;
       if (e.key === 'ArrowLeft') setFling({ id: top.recipe.id, dir: -1 });
       if (e.key === 'ArrowRight') setFling({ id: top.recipe.id, dir: 1 });
     };
@@ -55,28 +69,26 @@ export function SwipeView({ data, prefs, setPrefs, seen, onSkip, onLike, onUndo,
         </button>
       </header>
 
-      <div className="filters" role="toolbar" aria-label="Filtre">
+      <nav className="tabs" aria-label="Filtre">
         {FILTERS.map((f) => (
           <button
-            key={f.id} type="button" className={`chip ${prefs.diet === f.id ? 'is-on' : ''}`}
-            aria-pressed={prefs.diet === f.id} onClick={() => setPrefs((p) => ({ ...p, diet: f.id }))}
+            key={f.id} type="button" className={`tab-link ${filter === f.id ? 'is-on' : ''}`}
+            aria-pressed={filter === f.id} onClick={() => setPrefs((p) => ({ ...p, diet: f.id }))}
           >
             {f.label}
           </button>
         ))}
-        <button
-          type="button" className={`chip ${prefs.quick ? 'is-on' : ''}`} aria-pressed={prefs.quick}
-          onClick={() => setPrefs((p) => ({ ...p, quick: !p.quick }))}
-        >
-          ≤ 30 min
-        </button>
-      </div>
+      </nav>
 
       <div className="deck">
         {deck.length === 0 && (
           <div className="deck-empty">
-            <p className="deck-empty-title">Det var ugens retter</p>
-            <p className="muted">Skift butikker eller filtre for at se flere.</p>
+            <p className="deck-empty-title">{filter === 'gemte' && saved.length === 0 ? 'Ingen gemte retter endnu' : 'Det var ugens retter'}</p>
+            <p className="muted">
+              {filter === 'gemte' && saved.length === 0
+                ? 'Tryk på hjertet i en ret for at gemme den her.'
+                : 'Skift butikker eller filtre for at se flere.'}
+            </p>
             {seen.length > 0 && (
               <button type="button" className="secondary" onClick={onReset}>Se de overspringte igen</button>
             )}
@@ -92,18 +104,30 @@ export function SwipeView({ data, prefs, setPrefs, seen, onSkip, onLike, onUndo,
               onSwiped={(dir) => done(item.recipe, dir)}
               onTap={() => onOpen(item.recipe)}
             >
-              <DishArt recipe={item.recipe} className="card-art" />
-              <div className="card-body">
-                <h2 className="card-title">{item.recipe.title}</h2>
-                <div className="card-meta">
-                  <span><Clock size={16} /> {item.recipe.minutes} min</span>
-                  <span className="card-price">{krSmall(item.price)}<small> /portion</small></span>
+              <DishArt recipe={item.recipe} className="card-photo" />
+              <div className="card-shade" aria-hidden="true" />
+              <div className="card-top">
+                <div>
+                  <h2 className="card-title">{item.recipe.title}</h2>
+                  <p className="card-sub">{item.recipe.minutes} min · {DIET_LABEL[item.recipe.diet]}</p>
+                </div>
+                <button
+                  type="button" className="glass-btn" aria-label={`Se ingredienser og opskrift for ${item.recipe.title}`}
+                  onPointerDown={(e) => e.stopPropagation()} onClick={() => onOpen(item.recipe)}
+                >
+                  <Info size={20} />
+                </button>
+              </div>
+              <div className="card-bottom">
+                <div className="card-price">
+                  {krSmall(item.price)}<small>pr. portion</small>
                 </div>
                 <div className="card-offers">
+                  {item.heroes.length === 0 && <span className="glass-chip">Ikke på tilbud denne uge</span>}
                   {uniqueHeroes(item.heroes).slice(0, 2).map(({ ingredientId, offer }) => (
-                    <span className="offer-tag" key={ingredientId}>
+                    <span className="glass-chip" key={ingredientId}>
                       <span className="store-dot" style={{ background: storesById[offer.store]?.color }} />
-                      {data.ingredients[ingredientId].name} {krSmall(offer.price)}
+                      {data.ingredients[ingredientId].name} {krSmall(offer.price)} · {storesById[offer.store]?.name}
                     </span>
                   ))}
                 </div>
@@ -123,7 +147,7 @@ export function SwipeView({ data, prefs, setPrefs, seen, onSkip, onLike, onUndo,
         </button>
         <button type="button" className="round big like" aria-label="Vil have" disabled={!top}
           onClick={() => top && setFling({ id: top.recipe.id, dir: 1 })}>
-          <Heart size={28} />
+          <Plus size={30} />
         </button>
       </div>
     </div>
@@ -206,6 +230,7 @@ function SwipeCard({ children, depth, fling, onSwiped, onTap }) {
       onPointerUp={onPointerUp}
       onPointerCancel={onPointerUp}
       aria-hidden={!isTop}
+      inert={isTop ? undefined : ''}
     >
       {children}
       {isTop && (

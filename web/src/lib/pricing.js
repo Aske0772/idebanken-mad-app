@@ -83,8 +83,8 @@ export function priceDish(data, recipe, { people, days, staples = [], atHome = [
 }
 
 // Cheapest price per portion for a typical household – used to sort the deck.
-export function portionPrice(data, recipe, stores, people = 2) {
-  return priceDish(data, recipe, { people, days: 1, stores }).perMeal;
+export function portionPrice(data, recipe, stores, people = 2, atHome = []) {
+  return priceDish(data, recipe, { people, days: 1, stores, atHome }).perMeal;
 }
 
 // The week's shopping list. Needs are summed across dishes before choosing packs,

@@ -42,7 +42,8 @@ export function WeekView({ data, plan, prefs, list, onOpen, onSwipe }) {
               return (
                 <li key={item.id}>
                   <button type="button" className="week-item" onClick={() => onOpen(recipe, item)}>
-                    <DishArt recipe={recipe} className="week-thumb" />
+                    <DishArt recipe={recipe} className="week-bg" />
+                    <span className="week-shade" aria-hidden="true" />
                     <span className="week-text">
                       <span className="week-title">{recipe.title}</span>
                       <span className="muted small">

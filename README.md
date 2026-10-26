@@ -48,7 +48,7 @@ server/
   src/index.js          GET /api/week, POST /api/refresh, /images
 web/
   src/lib/pricing.js    al prisberegning (hele pakker, billigste butik, delte varer)
-  src/components/       Onboarding, SwipeView, DishSheet, WeekView, ListView
+  src/components/       Onboarding, SwipeView (fotokort), DishDetail (glaspanel), WeekView, ListView
 ```
 
 **Hvilke retter vises?** En ret kommer i bunken, når mindst én af dens hero-ingredienser (fx kyllingebryst i kylling i karry) er på tilbud i en af dine butikker. Bunken sorteres efter pris pr. portion.
@@ -69,7 +69,9 @@ Kun `tilbud` afgør, hvilke retter der kommer i bunken. Vejledende/anslåede bel
 
 **Friskhed:** serveren henter alt igen, når data er over 6 timer gammelt (`REFRESH_HOURS`), og tjekker hver time. Appen henter nye priser, når den åbnes igen, og hvert 15. minut. "Priser opdateret i dag kl. 10.35" står på uge- og indkøbssiden.
 
-**Billeder:** Læg `<opskrift-id>.jpg|webp|png` i `server/data/images/`, så bruges de automatisk. Indtil da tegner appen en farvet tallerken pr. ret.
+**Billeder:** Læg `<opskrift-id>.jpg|webp|png` i `server/data/images/`, så bruges de automatisk. Indtil da tegner appen en farvet tallerken pr. ret. Prompts til AI-genererede close-up-fotos (Nano Banana Pro via Figma Weave) ligger i `server/data/image-prompts.json`.
+
+**Kort og detaljer:** Swipe-kortet viser kun det, der afgør et swipe: foto, titel, tid, pris pr. portion og ugens tilbud. Ⓘ eller et tryk på kortet åbner detaljevisningen med dage/personer, pris, basisvarer og fanerne Ingredienser og Opskrift. Hjertet gemmer retten under fanen "Gemte".
 
 ## Datakilde – vigtigt
 
