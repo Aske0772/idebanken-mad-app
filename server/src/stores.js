@@ -1,4 +1,6 @@
 // Grocery chains we pull tilbudsaviser for. Ids are Tjek (eTilbudsavis) dealer ids.
+// Only chains with one avis for the whole country: regional chains such as Løvbjerg
+// and ABC Lavpris (Jylland/Fyn only, an avis per store) are left out.
 export const STORES = [
   { id: '9ba51', slug: 'netto', name: 'Netto', color: '#FFD950' },
   { id: '11deC', slug: 'rema', name: 'REMA 1000', color: '#1E3D8F' },
@@ -12,9 +14,7 @@ export const STORES = [
   { id: '267e1m', slug: 'meny', name: 'MENY', color: '#C8102E' },
   { id: '88ddE', slug: 'spar', name: 'SPAR', color: '#00843D' },
   { id: '603dfL', slug: 'minkobmand', name: 'Min Købmand', color: '#E30613' },
-  { id: 'f6f54', slug: 'letkob', name: 'LET-KØB', color: '#F28C00' },
-  { id: '65caN', slug: 'lovbjerg', name: 'Løvbjerg', color: '#6CB33F' },
-  { id: '70d42L', slug: 'abc', name: 'ABC Lavpris', color: '#E2001A' }
+  { id: 'f6f54', slug: 'letkob', name: 'LET-KØB', color: '#F28C00' }
 ];
 
 export const DEFAULT_STORES = ['9ba51', '11deC', '71c90'];

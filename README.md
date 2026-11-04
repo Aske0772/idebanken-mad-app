@@ -35,7 +35,7 @@ npm run dev
 | `npm run build && npm start` | Produktionsbuild serveret af API'et på port 8787 |
 | `npm run export --prefix server -- <mappe>` | Hent ugens priser og skriv `week.json` + billeder til en mappe (statisk version) |
 
-Miljøvariabler: `API_PORT` (8787), `LAT`/`LNG` (standard: København) til tilbud for et område, `DB_FILE`, `CONTACT_EMAIL` (kontakt i User-Agent, se [docs/datahentning.md](docs/datahentning.md)), `DISABLED_SOURCES` (nødbremse: `tjek`, `rema`, `lidl`), `REFRESH_HOURS` (standard 24). Til webbuildet: `BASE_PATH` (sti appen ligger under) og `VITE_WEEK_URL` (hent ugen fra en statisk fil i stedet for `/api/week`).
+Miljøvariabler: `API_PORT` (8787), `DB_FILE`, `CONTACT_EMAIL` (kontakt i User-Agent, se [docs/datahentning.md](docs/datahentning.md)), `DISABLED_SOURCES` (nødbremse: `tjek`, `rema`, `lidl`), `REFRESH_HOURS` (standard 24). Til webbuildet: `BASE_PATH` (sti appen ligger under) og `VITE_WEEK_URL` (hent ugen fra en statisk fil i stedet for `/api/week`).
 
 **GitHub Pages:** `.github/workflows/pages.yml` bygger en statisk version uden server: appen bygges med `BASE_PATH=/idebanken-mad-app/`, og ugens priser hentes i workflowet og lægges ved som `week.json`. Den kører ved hvert push til main og én gang i døgnet. Kræver, at Pages-kilden i repoets indstillinger står til "GitHub Actions".
 

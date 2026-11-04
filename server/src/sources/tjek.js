@@ -9,25 +9,44 @@ import { politeFetch } from './http.js';
 
 const BASE = 'https://squid-api.tjek.com/v2';
 const PAGE = 100;
+// Tjek refuses offsets past 1000, so a query can return at most this many rows.
+const MAX_ROWS = 1000;
 
-export async function fetchDealerOffers(dealerId, { lat, lng, radius = 50000, max = 1000 } = {}) {
-  const offers = [];
-  for (let offset = 0; offset < max; offset += PAGE) {
-    const url = new URL(`${BASE}/offers`);
-    url.search = new URLSearchParams({
-      dealer_ids: dealerId,
-      r_lat: lat,
-      r_lng: lng,
-      r_radius: radius,
-      limit: PAGE,
-      offset
-    });
-    const res = await politeFetch(url.href, { label: `Tjek ${dealerId} offset ${offset}` });
+// Every offer in a chain's current and upcoming aviser that run in all its stores
+// (no location filter). Fetched avis by avis, because a chain-wide query stops at
+// 1000 offers (Bilka has more), and in page order, because without a fixed order
+// Tjek's pages overlap and skip offers. Coop publishes each avis twice, as a paged
+// PDF and as a digital ("incito") avis with partly different offers, so both are
+// read; the copies they share, and offers printed in two aviser of the same chain
+// (Lidl's week and weekend avis), are kept once.
+export async function fetchDealerOffers(dealerId, { now = Date.now() } = {}) {
+  const catalogs = await fetchAll('catalogs', { dealer_ids: dealerId, types: 'paged,incito' }, `Tjek ${dealerId} aviser`);
+  const offers = new Map();
+  for (const c of catalogs) {
+    if (!c.offer_count || c.all_stores === false || Date.parse(c.run_till) <= now) continue;
+    const rows = await fetchAll('offers', { catalog_ids: c.id, order_by: 'page' }, `Tjek avis ${c.id}`);
+    for (const o of rows.map(normalizeOffer)) {
+      offers.set([sameName(o.heading), o.price, o.quantity?.amount, o.runFrom, o.runTill].join('|'), o);
+    }
+  }
+  return [...offers.values()];
+}
+
+// The two versions of an avis spell names slightly differently
+// ("kyllinge-lårfilet" / "kyllingelårfilet", "- lårmix" / "-lårmix").
+const sameName = (s) => s.toLowerCase().replace(/[^a-zæøåäöü0-9%]/g, '');
+
+async function fetchAll(path, params, label) {
+  const rows = [];
+  for (let offset = 0; offset < MAX_ROWS; offset += PAGE) {
+    const url = new URL(`${BASE}/${path}`);
+    url.search = new URLSearchParams({ ...params, limit: PAGE, offset });
+    const res = await politeFetch(url.href, { label: `${label} offset ${offset}` });
     const page = await res.json();
-    offers.push(...page);
+    rows.push(...page);
     if (page.length < PAGE) break;
   }
-  return offers.map(normalizeOffer);
+  return rows;
 }
 
 // Flatten a Tjek offer into what the matcher needs. Quantity is expressed in SI
@@ -45,7 +64,7 @@ export function normalizeOffer(o) {
   return {
     id: o.id,
     storeId: o.dealer_id,
-    heading: o.heading?.trim() ?? '',
+    heading: o.heading?.replace(/\s+/g, ' ').trim() ?? '', // digital aviser pad with spaces
     description: '', // marketing text is read for the before-price below, then dropped
     price,
     prePrice: o.pricing?.pre_price ?? prePriceFrom(o.description, price),

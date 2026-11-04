@@ -34,11 +34,6 @@ export function offerKind(offer) {
   return days <= TILBUD_MAX_DAYS ? 'tilbud' : 'fast';
 }
 
-const location = () => ({
-  lat: Number(process.env.LAT ?? 55.6761),
-  lng: Number(process.env.LNG ?? 12.5683)
-});
-
 // Chains whose everyday (shelf) prices we can read, by store id.
 export const SHELF_SOURCES = { [REMA_STORE_ID]: fetchRemaShelf, [LIDL_STORE_ID]: fetchLidlShelf };
 // Source names, used by the DISABLED_SOURCES kill switch and the source_runs log.
@@ -84,7 +79,7 @@ export async function refreshWeek(db, {
     for (const store of STORES) {
       if (blocked) break; // one block is enough: stop knocking on that door
       try {
-        const got = await fetchOffers(store.id, location());
+        const got = await fetchOffers(store.id);
         log(`  ${store.name.padEnd(14)} ${got.length} tilbud`);
         offers.push(...got);
         fetched.add(store.id);
@@ -257,7 +252,9 @@ export function weekPayload(db, week) {
     db.prepare(`SELECT store_id, COUNT(*) AS n FROM offers o WHERE week = ? AND kind = 'tilbud' AND ${ACTIVE} GROUP BY store_id`)
       .all(week, now, now).map((r) => [r.store_id, r.n])
   );
+  // Chains dropped from STORES may linger in an old database; they are not sent.
   const stores = db.prepare('SELECT * FROM stores').all()
+    .filter((s) => STORES.some((x) => x.id === s.id))
     .map((s) => ({ ...s, offerCount: counts[s.id] ?? 0 }))
     .sort((a, b) => STORES.findIndex((x) => x.id === a.id) - STORES.findIndex((x) => x.id === b.id));
 
