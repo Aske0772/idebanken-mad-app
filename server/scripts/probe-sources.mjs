@@ -15,6 +15,7 @@
 // Usage: node scripts/probe-sources.mjs [outDir]
 
 import { writeFile, appendFile, mkdir } from 'node:fs/promises';
+import { pathToFileURL } from 'node:url';
 import { USER_AGENT } from '../src/sources/http.js';
 
 const OUT = process.argv[2] ?? 'probe-out';
@@ -61,7 +62,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const lastHit = new Map();
 const robotsCache = new Map();
 
-async function get(url, accept) {
+export async function get(url, accept) {
   const host = new URL(url).host;
   const wait = (lastHit.get(host) ?? 0) + GAP_MS - Date.now();
   if (wait > 0) await sleep(wait);
@@ -111,7 +112,7 @@ function ruleMatches(rulePath, path) {
   return new RegExp(re).test(path);
 }
 
-async function robotsFor(origin) {
+export async function robotsFor(origin) {
   if (robotsCache.has(origin)) return robotsCache.get(origin);
   const r = await get(`${origin}/robots.txt`, 'text/plain');
   // RFC 9309: 4xx = no rules; unreachable or 5xx = treat everything as disallowed.
@@ -122,7 +123,7 @@ async function robotsFor(origin) {
   return entry;
 }
 
-async function allowed(url) {
+export async function allowed(url) {
   const u = new URL(url);
   const robots = await robotsFor(u.origin);
   const path = u.pathname + u.search;
@@ -160,7 +161,7 @@ function authHints(text) {
   return AUTH_HINTS.filter(([, re]) => re.test(text)).map(([name]) => name);
 }
 
-function jsonSummary(body) {
+export function jsonSummary(body) {
   try {
     const data = JSON.parse(body);
     const s = JSON.stringify(data);
@@ -255,6 +256,7 @@ function toMarkdown(reports) {
   return lines.join('\n') + '\n';
 }
 
+async function main() {
 const reports = [];
 for (const site of SITES) {
   console.log(`→ ${site.chain}`);
@@ -270,3 +272,6 @@ await writeFile(`${OUT}/probe-report.md`, md);
 await writeFile(`${OUT}/probe-report.json`, JSON.stringify(reports, null, 2));
 if (process.env.GITHUB_STEP_SUMMARY) await appendFile(process.env.GITHUB_STEP_SUMMARY, md);
 console.log(md);
+}
+
+if (import.meta.url === pathToFileURL(process.argv[1]).href) await main();
