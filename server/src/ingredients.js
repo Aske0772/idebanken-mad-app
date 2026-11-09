@@ -98,6 +98,11 @@ export const INGREDIENTS = {
     not: has('pålæg|færdig|røget|sylte|blodpølse|salami')
   },
 
+  oksekod_tern: {
+    name: 'oksekød i tern', unit: 'g', cat: 'kod', normal: [500, 60], minAmount: 300,
+    match: has('gullasch|oksekød i tern|okseterninger|oksetern|okse i tern|grydeklar.{0,10}okse|oksegryde.?kød'),
+    not: has('hakket|strimler|burger|bøf|suppe|færdig|dåse|konserves|pålæg')
+  },
   // Fisk
   laks: {
     name: 'laks', unit: 'g', cat: 'fisk', normal: [400, 70], minAmount: 150,
@@ -120,6 +125,11 @@ export const INGREDIENTS = {
     not: has('salat|mousse|pålæg|kats?emad|hund|snack|sushi|steak')
   },
 
+  rejer: {
+    name: 'rejer', unit: 'g', cat: 'fisk', normal: [400, 45], minAmount: 150,
+    match: has('rejer|tigerreje|kæmpereje'),
+    not: has('chips|salat|cocktail|tempura|dim ?sum|wonton|surimi|krabbe|pålæg|sandwich|nudel|sushi|tærte|panere|indbagt|m\/rejer|med rejer|sild')
+  },
   // Mejeri & æg
   aeg: {
     name: 'æg', unit: 'stk', cat: 'mejeri', normal: [10, 32], gPerStk: 60,
@@ -396,6 +406,16 @@ export const INGREDIENTS = {
     not: null
   },
 
+  remoulade: {
+    name: 'remoulade', unit: 'g', cat: 'kolonial', normal: [375, 15],
+    match: word('remoulade'),
+    not: has('karry|chips')
+  },
+  rodbeder: {
+    name: 'syltede rødbeder', unit: 'g', cat: 'kolonial', normal: [570, 14],
+    match: has('rødbede'),
+    not: has('chips|juice|hummus|carpaccio|salat|bowl|tærte')
+  },
   // Basisvarer – ikke med i prisen, medmindre brugeren slår dem til
   salt: {
     name: 'salt', unit: 'g', cat: 'basis', normal: [1000, 8], staple: true,
@@ -459,5 +479,6 @@ export const INGREDIENTS = {
     name: 'chiliflager', unit: 'g', cat: 'basis', normal: [40, 16], staple: true,
     match: has('chiliflager|chili flager|knust chili|chilipulver|cayenne'),
     not: null
-  }
+  },
+  rasp: { name: 'rasp', unit: 'g', cat: 'basis', normal: [200, 10], staple: true, match: word('rasp|panko'), not: null }
 };

@@ -1,0 +1,19 @@
+# Checks ingredient search patterns against the app's own published catalog.
+# Runs on recipe branches only; reads nothing but our own GitHub Pages site.
+name: Tjek søgemønstre
+on:
+  push:
+    branches: ['flere-retter-*']
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: curl -sSf -o catalog.json "https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/catalog.json"
+      - run: node server/scripts/check-matches.mjs catalog.json oksekod_tern rejer remoulade rodbeder > report.md && cat report.md && cat report.md >> "$GITHUB_STEP_SUMMARY"
+      - run: node server/scripts/check-matches.mjs catalog.json | tail -3

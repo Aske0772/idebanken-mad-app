@@ -610,5 +610,460 @@ export const RECIPES = [
       'Rør smør og revet parmesan i.',
       'Top med de ristede svampe.'
     ]
+  },
+  // --- Omgang 1 (november 2026): danske klassikere og hverdagsretter ---
+  {
+    id: 'boller-i-karry',
+    title: 'Boller i karry',
+    blurb: 'Bløde kødboller i mild karrysovs med porre, serveret med ris.',
+    minutes: 45, diet: 'kod', serves: 4, emoji: '🍛', hue: 46,
+    hero: ['hakket_grisekalv'],
+    ingredients: [
+      ['hakket_grisekalv', 500], ['loeg', 2], ['aeg', 1], ['hvedemel', 70], ['maelk', 400], ['porre', 1],
+      ['karry', 10], ['smor', 30], ['bouillon', 2], ['ris', 300], ['salt', 4], ['peber', 1]
+    ],
+    steps: [
+      'Rør farsen med 1 revet løg, æg, 2 spsk mel, salt og peber.',
+      'Kog 1 liter vand med 1 bouillonterning, sæt små boller i med en ske og kog dem 8 min. Gem kogevandet.',
+      'Sæt risene over.',
+      'Svits det andet løg og porren i smør med karryen, rør resten af melet i og jævn med mælk og 3 dl kogevand.',
+      'Simr sovsen 5 min, læg bollerne i og smag til.'
+    ]
+  },
+  {
+    id: 'hakkeboef-bloede-loeg',
+    title: 'Hakkebøf med bløde løg',
+    blurb: 'Saftige bøffer med brune løg, kogte kartofler og brun sovs.',
+    minutes: 35, diet: 'kod', serves: 4, emoji: '🥩', hue: 24,
+    hero: ['hakket_okse'],
+    ingredients: [
+      ['hakket_okse', 600], ['loeg', 4], ['kartofler', 1000], ['smor', 40], ['hvedemel', 20],
+      ['bouillon', 1], ['agurk', 1], ['salt', 4], ['peber', 2]
+    ],
+    steps: [
+      'Kog kartoflerne.',
+      'Form 4 bøffer, krydr med salt og peber.',
+      'Skær løgene i skiver og steg dem bløde og gyldne i halvdelen af smørret. Tag dem af panden.',
+      'Steg bøfferne 3-4 min på hver side. Rør mel og 3 dl vand med bouillon i stegefedtet til en sovs.',
+      'Server med løg, kartofler, sovs og agurkeskiver.'
+    ]
+  },
+  {
+    id: 'karbonader-aerter-gulerod',
+    title: 'Karbonader med ærter og gulerødder',
+    blurb: 'Paneret hakket svinekød med smørstuvede ærter og gulerødder.',
+    minutes: 40, diet: 'kod', serves: 4, emoji: '🍽️', hue: 36,
+    hero: ['hakket_svin'],
+    ingredients: [
+      ['hakket_svin', 600], ['aeg', 1], ['rasp', 80], ['kartofler', 1000], ['aerter', 300], ['gulerod', 4],
+      ['smor', 50], ['hvedemel', 20], ['maelk', 300], ['salt', 4], ['peber', 1]
+    ],
+    steps: [
+      'Kog kartoflerne. Form farsen til 8 flade karbonader.',
+      'Vend dem i pisket æg og derefter i rasp.',
+      'Steg dem 4-5 min på hver side i smør.',
+      'Kog gulerodstern og ærter 4 min. Lav en jævning af smør, mel og mælk, og vend grøntsagerne i.',
+      'Server karbonaderne med kartofler og stuvningen.'
+    ]
+  },
+  {
+    id: 'millionboef-mos',
+    title: 'Millionbøf med kartoffelmos',
+    blurb: 'Hakket oksekød i tomat og løg, stuvet over cremet kartoffelmos.',
+    minutes: 35, diet: 'kod', serves: 4, emoji: '🥔', hue: 18,
+    hero: ['hakket_okse'],
+    ingredients: [
+      ['hakket_okse', 500], ['loeg', 2], ['tomatpure', 70], ['bouillon', 1], ['hvedemel', 15],
+      ['kartofler', 1200], ['maelk', 200], ['smor', 30], ['paprika', 3], ['salt', 4], ['peber', 1]
+    ],
+    steps: [
+      'Kog kartoflerne møre.',
+      'Brun kødet med hakket løg og paprika.',
+      'Rør tomatpuré og mel i, og tilsæt 4 dl vand med bouillon. Simr 15 min.',
+      'Mos kartoflerne med varm mælk og smør, og smag til med salt.',
+      'Server millionbøffen over mosen.'
+    ]
+  },
+  {
+    id: 'gullasch',
+    title: 'Gullasch',
+    blurb: 'Mørt oksekød simret med paprika, peberfrugt og tomat.',
+    minutes: 120, diet: 'kod', serves: 4, emoji: '🍲', hue: 8,
+    hero: ['oksekod_tern'],
+    ingredients: [
+      ['oksekod_tern', 700], ['loeg', 2], ['hvidloeg', 2], ['peberfrugt', 2], ['hakkede_tomater', 400],
+      ['tomatpure', 70], ['paprika', 15], ['bouillon', 1], ['kartofler', 1000], ['olie', 20], ['salt', 5], ['peber', 1]
+    ],
+    steps: [
+      'Brun kødet i olie i portioner.',
+      'Tilsæt hakket løg og hvidløg, og rør paprika og tomatpuré i.',
+      'Hæld hakkede tomater og 5 dl vand med bouillon på. Læg låg på og simr 1½ time.',
+      'Tilsæt peberfrugt i strimler de sidste 20 min. Kog imens kartoflerne.',
+      'Smag til og server gullaschen med kartofler.'
+    ]
+  },
+  {
+    id: 'kylling-i-fad-citron',
+    title: 'Kylling i fad med citron og kartofler',
+    blurb: 'Kyllingelår og kartofler bagt sprøde med citron, hvidløg og timian.',
+    minutes: 55, diet: 'kod', serves: 4, emoji: '🍋', hue: 52,
+    hero: ['kyllingelaar'],
+    ingredients: [
+      ['kyllingelaar', 1000], ['kartofler', 1000], ['citron', 1], ['hvidloeg', 4], ['loeg', 2],
+      ['timian', 3], ['olie', 30], ['salat', 150], ['salt', 5], ['peber', 1]
+    ],
+    steps: [
+      'Tænd ovnen på 200 °C.',
+      'Skær kartofler i både og løg i kvarte. Vend dem med olie, timian, salt og peber i et fad.',
+      'Læg kyllingelårene ovenpå med hvidløg og citronbåde.',
+      'Bag i 45 min, til skindet er sprødt.',
+      'Server med en grøn salat.'
+    ]
+  },
+  {
+    id: 'pastasalat-kylling-pesto',
+    title: 'Pastasalat med kylling og pesto',
+    blurb: 'Lun pasta vendt med pesto, stegt kylling, tomat og salat.',
+    minutes: 25, diet: 'kod', serves: 4, emoji: '🥗', hue: 96,
+    hero: ['kyllingebryst'],
+    ingredients: [
+      ['kyllingebryst', 500], ['pasta', 400], ['pesto', 190], ['tomater', 300], ['salat', 150],
+      ['parmesan', 40], ['olie', 15], ['salt', 3], ['peber', 1]
+    ],
+    steps: [
+      'Kog pastaen og skyl den kort i koldt vand.',
+      'Steg kyllingen i strimler i olie, og krydr med salt og peber.',
+      'Vend pastaen med pesto.',
+      'Bland kylling, tomater i kvarte og salat i.',
+      'Drys med revet parmesan.'
+    ]
+  },
+  {
+    id: 'biksemad',
+    title: 'Biksemad',
+    blurb: 'Brunede kartofler, løg og pølser med spejlæg og rødbeder.',
+    minutes: 35, diet: 'kod', serves: 4, emoji: '🍳', hue: 30,
+    hero: ['polser'],
+    ingredients: [
+      ['kartofler', 1000], ['polser', 400], ['loeg', 2], ['aeg', 4], ['rodbeder', 300],
+      ['smor', 40], ['salt', 4], ['peber', 1]
+    ],
+    steps: [
+      'Kog kartoflerne og lad dem køle lidt af. Skær dem i tern.',
+      'Skær pølser i skiver og løg i tern.',
+      'Brun kartoflerne i smør, tilsæt løg og pølser, og steg til alt er gyldent.',
+      'Steg spejlæg.',
+      'Server biksemaden med æg og rødbeder.'
+    ]
+  },
+  {
+    id: 'kylling-tikka-masala',
+    title: 'Kylling tikka masala',
+    blurb: 'Yoghurtmarineret kylling i krydret tomat- og flødesauce.',
+    minutes: 40, diet: 'kod', serves: 4, emoji: '🍛', hue: 20,
+    hero: ['kyllingebryst'],
+    ingredients: [
+      ['kyllingebryst', 600], ['yoghurt', 150], ['loeg', 1], ['hvidloeg', 3], ['ingefaer', 20],
+      ['hakkede_tomater', 400], ['flode', 200], ['karry', 15], ['spidskommen', 3], ['ris', 300],
+      ['olie', 20], ['salt', 4]
+    ],
+    steps: [
+      'Vend kyllingetern med yoghurt, halvdelen af karryen og salt. Lad dem stå 10 min.',
+      'Sæt risene over.',
+      'Steg kyllingen gylden i olie og tag den af panden.',
+      'Svits løg, hvidløg og ingefær med resten af krydderierne, og tilsæt tomater og fløde. Simr 10 min.',
+      'Læg kyllingen tilbage, smag til og server med ris.'
+    ]
+  },
+  {
+    id: 'fyldte-peberfrugter',
+    title: 'Fyldte peberfrugter',
+    blurb: 'Peberfrugter fyldt med kødsovs og ris, gratineret med ost.',
+    minutes: 50, diet: 'kod', serves: 4, emoji: '🫑', hue: 4,
+    hero: ['hakket_okse', 'peberfrugt'],
+    ingredients: [
+      ['hakket_okse', 400], ['peberfrugt', 4], ['ris', 150], ['loeg', 1], ['hvidloeg', 2],
+      ['hakkede_tomater', 400], ['revet_ost', 100], ['oregano', 2], ['salat', 150], ['salt', 4], ['peber', 1]
+    ],
+    steps: [
+      'Tænd ovnen på 200 °C, og kog risene.',
+      'Brun kødet med løg og hvidløg, og tilsæt hakkede tomater og oregano. Simr 10 min, og rør risene i.',
+      'Halvér peberfrugterne på langs og fjern kernerne.',
+      'Fyld dem med kødet, drys med ost og bag 25 min.',
+      'Server med salat.'
+    ]
+  },
+  {
+    id: 'laks-ovngront',
+    title: 'Laks med ovnbagte grøntsager',
+    blurb: 'Laks bagt oven på søde kartofler, squash og peberfrugt.',
+    minutes: 40, diet: 'fisk', serves: 4, emoji: '🐟', hue: 16,
+    hero: ['laks'],
+    ingredients: [
+      ['laks', 500], ['sode_kartofler', 800], ['squash', 1], ['peberfrugt', 2], ['citron', 1],
+      ['olie', 30], ['timian', 2], ['salt', 4], ['peber', 1]
+    ],
+    steps: [
+      'Tænd ovnen på 200 °C.',
+      'Skær søde kartofler, squash og peberfrugt i stykker, og vend dem med olie, timian og salt.',
+      'Bag grøntsagerne 20 min.',
+      'Læg laksen i stykker ovenpå med citronskiver, og bag 12-15 min mere.',
+      'Krydr med peber og pres citron over.'
+    ]
+  },
+  {
+    id: 'fiskefrikadeller',
+    title: 'Fiskefrikadeller med kartofler og remoulade',
+    blurb: 'Hjemmelavede fiskefrikadeller med kogte kartofler og citron.',
+    minutes: 40, diet: 'fisk', serves: 4, emoji: '🐟', hue: 50,
+    hero: ['hvid_fisk'],
+    ingredients: [
+      ['hvid_fisk', 500], ['loeg', 1], ['aeg', 1], ['hvedemel', 40], ['maelk', 100], ['kartofler', 1000],
+      ['remoulade', 150], ['citron', 1], ['smor', 30], ['salt', 5], ['peber', 1]
+    ],
+    steps: [
+      'Kog kartoflerne.',
+      'Hak fisken fint i en blender med løg og salt.',
+      'Rør æg, mel og mælk i til en fast fars.',
+      'Steg frikadeller af farsen i smør, 4 min på hver side.',
+      'Server med kartofler, remoulade og citronbåde.'
+    ]
+  },
+  {
+    id: 'pasta-rejer-hvidloeg',
+    title: 'Pasta med rejer, hvidløg og chili',
+    blurb: 'Hurtig pasta med rejer, hvidløg, chili og citron.',
+    minutes: 20, diet: 'fisk', serves: 4, emoji: '🦐', hue: 10,
+    hero: ['rejer'],
+    ingredients: [
+      ['pasta', 400], ['rejer', 400], ['hvidloeg', 4], ['chili', 2], ['citron', 1], ['krydderurter', 1],
+      ['olie', 40], ['tomater', 250], ['salt', 3], ['peber', 1]
+    ],
+    steps: [
+      'Kog pastaen.',
+      'Svits hvidløg og chili i olie et minut.',
+      'Tilsæt rejer og tomater i halve, og varm dem igennem.',
+      'Vend pastaen i med citronsaft, revet citronskal og hakkede krydderurter.',
+      'Smag til med salt og peber.'
+    ]
+  },
+  {
+    id: 'fisk-i-fad-porre',
+    title: 'Fisk i fad med porrer og fløde',
+    blurb: 'Hvid fisk bagt i fløde med porrer, serveret med kartofler.',
+    minutes: 35, diet: 'fisk', serves: 4, emoji: '🐟', hue: 80,
+    hero: ['hvid_fisk'],
+    ingredients: [
+      ['hvid_fisk', 600], ['porre', 2], ['flode', 250], ['citron', 1], ['kartofler', 1000],
+      ['smor', 20], ['salt', 4], ['peber', 1]
+    ],
+    steps: [
+      'Tænd ovnen på 200 °C, og kog kartoflerne.',
+      'Skær porrerne i ringe og svits dem bløde i smør.',
+      'Læg porrerne i et fad med fisken ovenpå. Krydr med salt, peber og revet citronskal.',
+      'Hæld fløden over og bag i 20 min.',
+      'Server med kartofler og citronbåde.'
+    ]
+  },
+  {
+    id: 'fiskesuppe',
+    title: 'Fiskesuppe med rejer',
+    blurb: 'Cremet suppe med hvid fisk, rejer, gulerod og porre.',
+    minutes: 35, diet: 'fisk', serves: 4, emoji: '🥣', hue: 28,
+    hero: ['hvid_fisk', 'rejer'],
+    ingredients: [
+      ['hvid_fisk', 400], ['rejer', 200], ['gulerod', 3], ['porre', 1], ['kartofler', 400],
+      ['tomatpure', 40], ['flode', 200], ['bouillon', 2], ['hvidloeg', 2], ['krydderurter', 1],
+      ['olie', 15], ['salt', 4], ['peber', 1]
+    ],
+    steps: [
+      'Svits porre, hvidløg og gulerod i tern i olie.',
+      'Tilsæt kartoffeltern, tomatpuré, 1 liter vand og bouillon. Kog 12 min.',
+      'Hæld fløden ved og læg fisken i stykker i. Træk 5 min ved svag varme.',
+      'Tilsæt rejerne til sidst.',
+      'Smag til og drys med krydderurter.'
+    ]
+  },
+  {
+    id: 'paneret-fisk-remoulade',
+    title: 'Paneret fisk med kartofler og remoulade',
+    blurb: 'Sprøde fiskefileter i rasp med kartofler, remoulade og citron.',
+    minutes: 30, diet: 'fisk', serves: 4, emoji: '🍋', hue: 44,
+    hero: ['hvid_fisk'],
+    ingredients: [
+      ['hvid_fisk', 600], ['aeg', 1], ['rasp', 80], ['hvedemel', 30], ['kartofler', 1000],
+      ['remoulade', 150], ['citron', 1], ['smor', 40], ['salt', 4], ['peber', 1]
+    ],
+    steps: [
+      'Kog kartoflerne.',
+      'Vend fileterne i mel, derefter pisket æg og til sidst rasp.',
+      'Steg dem gyldne i smør, 3 min på hver side.',
+      'Krydr med salt og peber.',
+      'Server med kartofler, remoulade og citron.'
+    ]
+  },
+  {
+    id: 'laks-spinat-flode',
+    title: 'Laks i fad med spinat og fløde',
+    blurb: 'Laks bagt på en bund af spinat og citronfløde, med ris.',
+    minutes: 30, diet: 'fisk', serves: 4, emoji: '🐟', hue: 120,
+    hero: ['laks'],
+    ingredients: [
+      ['laks', 500], ['spinat', 300], ['flode', 250], ['citron', 1], ['hvidloeg', 2], ['ris', 300],
+      ['salt', 4], ['peber', 1]
+    ],
+    steps: [
+      'Tænd ovnen på 200 °C, og sæt risene over.',
+      'Læg spinaten i et fad og fordel hvidløg i skiver over.',
+      'Læg laksen ovenpå, og krydr med salt, peber og revet citronskal.',
+      'Hæld fløden over og bag 15-18 min.',
+      'Pres citron over og server med ris.'
+    ]
+  },
+  {
+    id: 'groentsagslasagne',
+    title: 'Grøntsagslasagne',
+    blurb: 'Lasagne med squash, champignon og spinat i tomatsauce.',
+    minutes: 70, diet: 'vegetar', serves: 4, emoji: '🍅', hue: 6,
+    hero: ['squash', 'champignon'],
+    ingredients: [
+      ['lasagneplader', 250], ['squash', 2], ['champignon', 250], ['spinat', 200], ['loeg', 1],
+      ['hvidloeg', 2], ['hakkede_tomater', 800], ['maelk', 600], ['hvedemel', 50], ['smor', 50],
+      ['revet_ost', 150], ['oregano', 2], ['olie', 20], ['salt', 5], ['peber', 1]
+    ],
+    steps: [
+      'Tænd ovnen på 200 °C.',
+      'Svits løg, hvidløg, squash i tern og champignon i olie. Tilsæt tomater og oregano, og simr 10 min. Vend spinaten i.',
+      'Lav en hvid sauce af smør, mel og mælk, og smag til med salt.',
+      'Læg lag af grøntsagssauce, plader og hvid sauce i et fad. Slut med hvid sauce og ost.',
+      'Bag 40 min, og lad den hvile 10 min før servering.'
+    ]
+  },
+  {
+    id: 'pasta-tomat-mozzarella',
+    title: 'Pasta med tomatsauce og mozzarella',
+    blurb: 'Enkel tomatsauce med hvidløg, frisk mozzarella og basilikum.',
+    minutes: 25, diet: 'vegetar', serves: 4, emoji: '🍝', hue: 2,
+    hero: ['mozzarella'],
+    ingredients: [
+      ['pasta', 500], ['hakkede_tomater', 800], ['hvidloeg', 3], ['mozzarella', 250], ['krydderurter', 1],
+      ['parmesan', 40], ['olie', 30], ['sukker', 5], ['salt', 4], ['peber', 1]
+    ],
+    steps: [
+      'Svits hvidløg i olie, tilsæt tomater og en knivspids sukker. Simr 15 min.',
+      'Kog pastaen.',
+      'Smag saucen til med salt og peber.',
+      'Vend pastaen i saucen med mozzarella i stykker.',
+      'Top med basilikum og revet parmesan.'
+    ]
+  },
+  {
+    id: 'aeggekage',
+    title: 'Æggekage med kartofler og tomat',
+    blurb: 'Luftig æggekage med stegte kartofler, tomat og purløg.',
+    minutes: 30, diet: 'vegetar', serves: 4, emoji: '🍳', hue: 48,
+    hero: ['aeg'],
+    ingredients: [
+      ['aeg', 8], ['maelk', 200], ['hvedemel', 20], ['kartofler', 600], ['loeg', 1], ['tomater', 300],
+      ['krydderurter', 1], ['smor', 30], ['salt', 4], ['peber', 1]
+    ],
+    steps: [
+      'Kog kartoflerne, og skær dem i skiver.',
+      'Pisk æg, mælk, mel, salt og peber sammen.',
+      'Steg løg og kartofler gyldne i smør på en stor pande.',
+      'Hæld æggemassen over og lad den stivne under låg ved lav varme i 10 min.',
+      'Top med tomat og purløg.'
+    ]
+  },
+  {
+    id: 'shakshuka',
+    title: 'Shakshuka',
+    blurb: 'Æg pocheret i krydret tomat og peberfrugt med feta.',
+    minutes: 30, diet: 'vegetar', serves: 4, emoji: '🍳', hue: 12,
+    hero: ['aeg', 'peberfrugt'],
+    ingredients: [
+      ['aeg', 8], ['hakkede_tomater', 800], ['peberfrugt', 2], ['loeg', 1], ['hvidloeg', 3], ['feta', 150],
+      ['pita', 4], ['spidskommen', 3], ['paprika', 4], ['olie', 30], ['krydderurter', 1], ['salt', 4]
+    ],
+    steps: [
+      'Svits løg, hvidløg og peberfrugt i olie.',
+      'Rør spidskommen og paprika i, tilsæt tomaterne og simr 10 min.',
+      'Lav små huller i saucen og slå æggene i. Læg låg på og lad dem stivne i 6-8 min.',
+      'Smuldr feta og drys krydderurter over.',
+      'Server med lunt pitabrød.'
+    ]
+  },
+  {
+    id: 'boenne-tacos',
+    title: 'Bønnetacos',
+    blurb: 'Tortillas med krydrede bønner, majs, avocado og creme fraiche.',
+    minutes: 25, diet: 'vegetar', serves: 4, emoji: '🌮', hue: 34,
+    hero: ['bonner', 'avocado'],
+    ingredients: [
+      ['bonner', 800], ['tortillas', 8], ['majs', 300], ['avocado', 2], ['tomater', 250], ['salat', 150],
+      ['revet_ost', 100], ['creme_fraiche', 200], ['loeg', 1], ['tacokrydderi', 28], ['lime', 1], ['olie', 15]
+    ],
+    steps: [
+      'Svits løg i olie, tilsæt skyllede bønner, tacokrydderi og en skvæt vand. Mas let og simr 5 min.',
+      'Varm tortillas.',
+      'Skær tomater og avocado i tern, og vend avocadoen med limesaft.',
+      'Fyld tortillas med bønner, majs, grønt og ost.',
+      'Top med creme fraiche.'
+    ]
+  },
+  {
+    id: 'minestrone',
+    title: 'Minestrone',
+    blurb: 'Italiensk grøntsagssuppe med bønner, pasta og parmesan.',
+    minutes: 40, diet: 'vegetar', serves: 4, emoji: '🥣', hue: 70,
+    hero: ['porre', 'bonner'],
+    ingredients: [
+      ['gulerod', 3], ['porre', 1], ['loeg', 1], ['hvidloeg', 2], ['kartofler', 300], ['squash', 1],
+      ['hakkede_tomater', 400], ['bonner', 400], ['pasta', 150], ['bouillon', 2], ['parmesan', 40],
+      ['olie', 20], ['salt', 4], ['peber', 1]
+    ],
+    steps: [
+      'Svits løg, hvidløg, gulerod og porre i olie.',
+      'Tilsæt kartofler og squash i tern, tomater, 1,2 liter vand og bouillon. Kog 15 min.',
+      'Tilsæt pasta og skyllede bønner, og kog til pastaen er mør.',
+      'Smag til med salt og peber.',
+      'Server med revet parmesan.'
+    ]
+  },
+  {
+    id: 'ovnbagt-blomkaal-kikaerter',
+    title: 'Ovnbagt blomkål med kikærter og yoghurt',
+    blurb: 'Krydret, ristet blomkål og kikærter med citronyoghurt og ris.',
+    minutes: 40, diet: 'vegetar', serves: 4, emoji: '🥦', hue: 40,
+    hero: ['blomkaal'],
+    ingredients: [
+      ['blomkaal', 1], ['kikaerter', 400], ['yoghurt', 300], ['citron', 1], ['hvidloeg', 1], ['ris', 300],
+      ['spidskommen', 4], ['paprika', 4], ['olie', 40], ['krydderurter', 1], ['salt', 4]
+    ],
+    steps: [
+      'Tænd ovnen på 220 °C, og sæt risene over.',
+      'Del blomkålen i buketter, og vend dem med skyllede kikærter, olie, spidskommen, paprika og salt.',
+      'Rist i ovnen i 25 min.',
+      'Rør yoghurt med revet hvidløg, citronsaft og salt.',
+      'Server over ris med yoghurt og krydderurter.'
+    ]
+  },
+  {
+    id: 'pasta-spinat-feta',
+    title: 'Pasta med spinat og feta',
+    blurb: 'Cremet pasta med spinat, feta, hvidløg og citron.',
+    minutes: 20, diet: 'vegetar', serves: 4, emoji: '🍝', hue: 110,
+    hero: ['spinat', 'feta'],
+    ingredients: [
+      ['pasta', 500], ['spinat', 300], ['feta', 200], ['hvidloeg', 3], ['citron', 1], ['flode', 100],
+      ['olie', 20], ['peber', 1], ['salt', 3]
+    ],
+    steps: [
+      'Kog pastaen, og gem en kop kogevand.',
+      'Svits hvidløg i olie, og lad spinaten falde sammen på panden.',
+      'Smuldr fetaen i, og tilsæt fløde og lidt kogevand.',
+      'Vend pastaen i med citronskal og -saft.',
+      'Smag til med peber.'
+    ]
   }
 ];
