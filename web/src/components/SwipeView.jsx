@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { DishArt } from './ui.jsx';
 import { X, Plus, Undo, Store } from './icons.jsx';
-import { heroOffers, portionPrice } from '../lib/pricing.js';
+import { heroOffers, portionPrice, suggestions } from '../lib/pricing.js';
 import { rankDeck } from '../lib/rank.js';
-import { krSmall } from '../lib/format.js';
+import { krSmall, andList } from '../lib/format.js';
 
 const FILTERS = [
   { id: 'alle', label: 'Alle' },
@@ -16,32 +16,43 @@ const FILTERS = [
 
 export const DIET_LABEL = { kod: 'Kød', fisk: 'Fisk', vegetar: 'Vegetar' };
 
+// A dish not on offer still joins the deck when the week already buys most of it:
+// what it adds per portion is at most this share of its own portion price.
+export const REUSE_SHARE = 0.6;
+
 const passes = (filter, recipe, saved) => {
   if (filter === 'hurtig') return recipe.minutes <= 30;
   if (filter === 'gemte') return saved.includes(recipe.id);
   return filter === 'alle' || recipe.diet === filter;
 };
 
-export function SwipeView({ data, prefs, setPrefs, seen, past, onSkip, onLike, onUndo, canUndo, onOpen, onStores, onReset }) {
+export function SwipeView({ data, prefs, setPrefs, plan = [], seen, past, onSkip, onLike, onUndo, canUndo, onOpen, onStores, onReset }) {
   const storesById = useMemo(() => Object.fromEntries(data.stores.map((s) => [s.id, s])), [data]);
   const filter = FILTERS.some((f) => f.id === prefs.diet) ? prefs.diet : 'alle';
   const saved = prefs.saved ?? [];
 
   // This week's deck: dishes with a hero ingredient on offer in the chosen stores,
+  // plus dishes that mostly use what the week already buys ("Bruger det, du har"),
   // ranked by price and discount, with dishes from the last weeks resting at the
-  // back (lib/rank.js). Saved dishes show up under "Gemte" even without an offer,
-  // cheapest first.
+  // back (lib/rank.js). A reuse dish is ranked by what it adds per portion.
+  // Saved dishes show up under "Gemte" even without an offer, cheapest first.
   const deck = useMemo(() => {
+    const reuse = new Map(
+      suggestions(data, plan, {
+        stores: prefs.stores, atHome: prefs.atHome, people: prefs.people, limit: Infinity
+      }).map((s) => [s.recipe.id, s])
+    );
     const items = data.recipes
       .filter((r) => !seen.includes(r.id) && passes(filter, r, saved))
-      .map((r) => ({
-        recipe: r,
-        heroes: heroOffers(data, r, prefs.stores),
-        price: portionPrice(data, r, prefs.stores, prefs.people, prefs.atHome)
-      }));
+      .map((r) => {
+        const price = portionPrice(data, r, prefs.stores, prefs.people, prefs.atHome);
+        const r2 = reuse.get(r.id);
+        const reuses = r2 && r2.perMeal <= REUSE_SHARE * price ? r2 : null;
+        return { recipe: r, heroes: heroOffers(data, r, prefs.stores), price: reuses ? reuses.perMeal : price, reuses };
+      });
     if (filter === 'gemte') return items.sort((a, b) => a.price - b.price);
-    return rankDeck(data, items.filter((x) => x.heroes.length > 0), { week: data.week, past });
-  }, [data, prefs.stores, prefs.people, prefs.atHome, filter, saved, seen, past]);
+    return rankDeck(data, items.filter((x) => x.heroes.length > 0 || x.reuses), { week: data.week, past });
+  }, [data, plan, prefs.stores, prefs.people, prefs.atHome, filter, saved, seen, past]);
 
   const [fling, setFling] = useState(null);
   const top = deck[0];
@@ -116,11 +127,17 @@ export function SwipeView({ data, prefs, setPrefs, seen, past, onSkip, onLike, o
               </div>
               <div className="card-bottom">
                 <div className="card-price">
-                  {krSmall(item.price)}<small>pr. portion</small>
+                  {item.reuses ? `+${krSmall(item.price)}` : krSmall(item.price)}
+                  <small>{item.reuses ? 'ekstra pr. portion' : 'pr. portion'}</small>
                 </div>
                 <div className="card-offers">
-                  {item.heroes.length === 0 && <span className="glass-chip">Ikke på tilbud denne uge</span>}
-                  {uniqueHeroes(item.heroes).slice(0, 2).map(({ ingredientId, offer }) => (
+                  {item.reuses && (
+                    <span className="glass-chip glass-chip--reuse">
+                      Bruger det, du har: {andList(item.reuses.shared.slice(0, 3).map((id) => data.ingredients[id].name))}
+                    </span>
+                  )}
+                  {item.heroes.length === 0 && !item.reuses && <span className="glass-chip">Ikke på tilbud denne uge</span>}
+                  {uniqueHeroes(item.heroes).slice(0, item.reuses ? 1 : 2).map(({ ingredientId, offer }) => (
                     <span className="glass-chip" key={ingredientId}>
                       {data.ingredients[ingredientId].name} {krSmall(offer.price)} · {storesById[offer.store]?.name}
                     </span>
