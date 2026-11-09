@@ -4,6 +4,7 @@ import { X, Heart, Minus, Plus, Clock, Tag, Check } from './icons.jsx';
 import { DIET_LABEL } from './SwipeView.jsx';
 import { priceDish, isExact, addedCost } from '../lib/pricing.js';
 import { kr, krSmall, qty, capitalize, sourceParts } from '../lib/format.js';
+import { layoutWeek, DAY_SHORT, DAY_NAMES } from '../lib/week.js';
 
 // Order of ingredient groups in the dish view (keys from server CATEGORIES).
 const CATEGORY_ORDER = ['kod', 'fisk', 'gront', 'mejeri', 'brod', 'kolonial', 'frost'];
@@ -21,6 +22,8 @@ export function DishDetail({ data, recipe, item, mode, prefs, plan, saved, onTog
   const [days, setDays] = useState(item?.days ?? 1);
   const [people, setPeople] = useState(item?.people ?? prefs.people);
   const [staples, setStaples] = useState(item?.staples ?? []);
+  // null until picked: a new dish then takes the first free evening.
+  const [day, setDay] = useState(() => (item ? layoutWeek(plan).starts[item.id] ?? null : null));
   const [tab, setTab] = useState('ingredienser');
   const [picking, setPicking] = useState(false);
   const closeRef = useRef(null);
@@ -66,7 +69,9 @@ export function DishDetail({ data, recipe, item, mode, prefs, plan, saved, onTog
   const bought = price.lines.filter((l) => !l.staple);
   const stapleLines = price.lines.filter((l) => l.staple);
   const toggleStaple = (id) => setStaples((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));
-  const add = () => onConfirm({ days, people, staples });
+  const add = () => onConfirm({ days, people, staples, day });
+  // Where the dish lands as things stand, shown before anything is picked.
+  const shownDay = day ?? layoutWeek([...plan.filter((p) => p.id !== item?.id), { id: '_', days }]).starts._ ?? null;
 
   // A new dish can take the place of one already in the week. When adding it
   // would go past 7 evenings, replacing becomes the main action.
@@ -102,6 +107,7 @@ export function DishDetail({ data, recipe, item, mode, prefs, plan, saved, onTog
           <Counter label="Dage" value={days} max={7} onChange={setDays} />
           <Counter label="Personer" value={people} max={12} onChange={setPeople} />
         </div>
+        <DayPicker day={shownDay} days={days} onChange={setDay} />
 
         <div className="detail-price" aria-live="polite">
           <span className="detail-total">{kr(price.total)}</span>
@@ -278,6 +284,29 @@ function IngredientBody({ line, storesById }) {
         <span className="box-price">{exact ? '' : 'ca. '}{kr(source.cost)}</span>
       </span>
     </>
+  );
+}
+
+// Seven evenings, Monday first. A dish over several days lights up each of them.
+function DayPicker({ day, days, onChange }) {
+  const start = day == null ? null : Math.min(day, 7 - days);
+  return (
+    <div className="counter" role="group" aria-label="Aften">
+      <span className="counter-label">Aften</span>
+      <div className="day-picker">
+        {DAY_SHORT.map((name, i) => {
+          const on = start != null && i >= start && i < start + days;
+          return (
+            <button
+              key={name} type="button" className={on ? (i === start ? 'is-on' : 'is-span') : ''}
+              aria-pressed={i === start} aria-label={DAY_NAMES[i]} disabled={i + days > 7} onClick={() => onChange(i)}
+            >
+              {name.slice(0, 2)}
+            </button>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
