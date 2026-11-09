@@ -39,6 +39,7 @@ jobs:
         env:
           BASE_PATH: /${{ github.event.repository.name }}/
           VITE_WEEK_URL: week.json
+          VITE_CATALOG_URL: catalog.json
       - name: Scrape this week's prices into the build
         run: npm run export --prefix server -- ../web/dist
       - uses: actions/configure-pages@v5

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { DishArt } from './ui.jsx';
 import { X, Heart, Minus, Plus, Clock, Tag, Check } from './icons.jsx';
 import { DIET_LABEL } from './SwipeView.jsx';
-import { priceDish, isExact } from '../lib/pricing.js';
+import { priceDish, isExact, addedCost } from '../lib/pricing.js';
 import { kr, krSmall, qty, capitalize, sourceParts } from '../lib/format.js';
 
 // Order of ingredient groups in the dish view (keys from server CATEGORIES).
@@ -57,6 +57,12 @@ export function DishDetail({ data, recipe, item, mode, prefs, plan, saved, onTog
   }, [onClose]);
 
   const price = priceDish(data, recipe, { people, days, staples, atHome: prefs.atHome, stores: prefs.stores });
+  // Next to the dishes already in the week, packs are shared: only what is not
+  // already bought counts (the carrots left in the bag are free).
+  const extraCost = mode === 'add' && plan.length > 0
+    ? addedCost(data, plan, { recipeId: recipe.id, people, days, staples }, { stores: prefs.stores, atHome: prefs.atHome })
+    : null;
+  const sharesPacks = extraCost != null && extraCost < price.total - 0.5;
   const bought = price.lines.filter((l) => !l.staple);
   const stapleLines = price.lines.filter((l) => l.staple);
   const toggleStaple = (id) => setStaples((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));
@@ -102,6 +108,9 @@ export function DishDetail({ data, recipe, item, mode, prefs, plan, saved, onTog
           <span className="detail-per">
             <strong>{krSmall(price.perMeal)}</strong> pr. person pr. måltid · {price.meals} måltider
           </span>
+          {sharesPacks && (
+            <span className="detail-shared">Med det, du allerede har i ugen: kun +{kr(extraCost)}</span>
+          )}
           {price.approx > 0 && <span className="detail-approx">heraf ca. {kr(price.approx)} for varer uden pris i dine butikker</span>}
         </div>
 
@@ -178,7 +187,7 @@ export function DishDetail({ data, recipe, item, mode, prefs, plan, saved, onTog
           </button>
         )}
         <button type="button" className="primary wide" onClick={full ? openPicker : add}>
-          {full ? 'Erstat en ret' : `${mode === 'edit' ? 'Gem ændringer' : 'Tilføj til ugen'} · ${kr(price.total)}`}
+          {full ? 'Erstat en ret' : `${mode === 'edit' ? 'Gem ændringer' : 'Tilføj til ugen'} · ${sharesPacks ? `+${kr(extraCost)}` : kr(price.total)}`}
         </button>
       </div>
 

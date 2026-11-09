@@ -7,6 +7,7 @@ import { isDisabled, SourceBlockedError } from './sources/http.js';
 import { fetchRemaShelf, REMA_STORE_ID } from './sources/rema.js';
 import { fetchLidlShelf, LIDL_STORE_ID } from './sources/lidl.js';
 import { matchOffer } from './match.js';
+import { isFood } from './food.js';
 import { DATA_DIR } from './db.js';
 
 export const IMAGE_DIR = join(DATA_DIR, 'images');
@@ -55,7 +56,8 @@ export function sourcePause(db, source, now = Date.now()) {
 }
 
 // Fetch every store's avis plus the shelf prices we have, match them to
-// ingredients and store the week's dishes. A source that fails, blocks us or is
+// ingredients and store the week's dishes. Every food item is kept, also those no
+// recipe uses, so people can add them to their list themselves ("Tilføj vare"). A source that fails, blocks us or is
 // switched off keeps its last good prices: those still valid are carried into
 // the new week, so the app never empties because one host went dark.
 export async function refreshWeek(db, {
@@ -122,8 +124,8 @@ export async function refreshWeek(db, {
   );
   const insertOffer = db.prepare(`
     INSERT OR REPLACE INTO offers
-      (id, week, store_id, heading, description, price, pre_price, image, run_from, run_till, kind)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      (id, week, store_id, heading, description, price, pre_price, image, run_from, run_till, kind, size_amount, size_unit)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
   const insertMatch = db.prepare(
     'INSERT OR REPLACE INTO offer_matches (offer_id, week, ingredient_id, amount, assumed) VALUES (?, ?, ?, ?, ?)'
@@ -134,7 +136,7 @@ export async function refreshWeek(db, {
   // Only facts are stored: name, pack size, price, before-price, validity. Never images.
   const store = (o, kind, matches) => {
     insertOffer.run(o.id, week, o.storeId, o.heading, o.description, o.price, o.prePrice,
-      null, o.runFrom, o.runTill, kind);
+      null, o.runFrom, o.runTill, kind, o.quantity?.amount ?? null, o.quantity?.unit ?? null);
     for (const m of matches) insertMatch.run(o.id, week, m.ingredientId, m.amount, m.assumed ? 1 : 0);
   };
 
@@ -152,14 +154,16 @@ export async function refreshWeek(db, {
     for (const storeId of shelfFetched) clear("store_id = ? AND kind = 'hylde'", storeId);
     db.prepare('DELETE FROM week_recipes WHERE week = ?').run(week);
     for (const o of offers) {
+      if (o.price == null || o.price <= 0) continue;
       const matches = matchOffer(o);
-      if (matches.length === 0) continue; // only food we can cook with is kept
+      // Non-food in the avis (TVs, detergent, clothes) is dropped; all food is kept.
+      if (matches.length === 0 && !isFood(o)) continue;
       store(o, offerKind(o), matches);
     }
+    // Shelf sources only list food departments, so every product is kept.
     for (const p of shelf) {
-      const matches = matchOffer(p, { shelf: true });
-      if (matches.length === 0) continue;
-      store(p, 'hylde', matches);
+      if (p.price == null || p.price <= 0) continue;
+      store(p, 'hylde', matchOffer(p, { shelf: true }));
     }
     // Stores we did not reach this time keep what is still valid from the last week we did.
     for (const s of STORES) {
@@ -176,7 +180,9 @@ export async function refreshWeek(db, {
     db.prepare('INSERT OR REPLACE INTO weeks (week, refreshed_at, offer_count, errors) VALUES (?, ?, ?, ?)')
       .run(week, nowIso, counts.tilbud, JSON.stringify(errors));
     db.exec('COMMIT');
-    log(`  ${counts.tilbud} ugetilbud, ${counts.fast} faste priser, ${counts.hylde} hyldepriser, ${dishes} retter`);
+    const matched = db.prepare('SELECT COUNT(DISTINCT offer_id) AS n FROM offer_matches WHERE week = ?').get(week).n;
+    log(`  ${counts.tilbud} ugetilbud, ${counts.fast} faste priser, ${counts.hylde} hyldepriser ` +
+      `(${matched} passer til opskrifterne), ${dishes} retter`);
   } catch (err) {
     db.exec('ROLLBACK');
     throw err;
@@ -196,8 +202,8 @@ function carryForward(db, week, storeId, group, nowIso) {
   if (!prev) return;
   const valid = '(o.run_till IS NULL OR o.run_till > ?)';
   db.prepare(`
-    INSERT OR IGNORE INTO offers (id, week, store_id, heading, description, price, pre_price, image, run_from, run_till, kind)
-    SELECT o.id, ?, o.store_id, o.heading, o.description, o.price, o.pre_price, o.image, o.run_from, o.run_till, o.kind
+    INSERT OR IGNORE INTO offers (id, week, store_id, heading, description, price, pre_price, image, run_from, run_till, kind, size_amount, size_unit)
+    SELECT o.id, ?, o.store_id, o.heading, o.description, o.price, o.pre_price, o.image, o.run_from, o.run_till, o.kind, o.size_amount, o.size_unit
     ${rowsIn} AND ${valid}
   `).run(week, prev, storeId, nowIso);
   db.prepare(`
@@ -320,4 +326,20 @@ function pickShelf(list) {
   const smallest = [...list].sort((a, b) => a.amount - b.amount)[0];
   if (smallest && !picked.includes(smallest)) picked.push(smallest);
   return picked;
+}
+
+// Every food item valid right now, for "Tilføj vare": people search it and add what
+// a recipe doesn't cover. Kept apart from weekPayload so the week loads fast and the
+// catalog is fetched only when someone opens the search.
+export function catalogPayload(db, week) {
+  const now = new Date().toISOString();
+  const items = db.prepare(`
+    SELECT o.id, o.store_id, o.heading, o.price, o.pre_price, o.size_amount, o.size_unit, o.run_till, o.kind
+    FROM offers o WHERE o.week = ? AND ${ACTIVE}
+    ORDER BY o.heading
+  `).all(week, now, now).map((r) => ({
+    id: r.id, store: r.store_id, title: r.heading, price: r.price, prePrice: r.pre_price,
+    amount: r.size_amount, unit: r.size_unit, until: r.run_till, kind: r.kind
+  }));
+  return { week, generatedAt: now, items };
 }

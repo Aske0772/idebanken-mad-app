@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { cheapest, priceDish, shoppingList, isOnOffer, isExact } from './pricing.js';
+import { cheapest, priceDish, shoppingList, isOnOffer, isExact, addedCost, suggestions } from './pricing.js';
 
 const data = {
   ingredients: {
@@ -99,4 +99,43 @@ it('only a running avis tilbud puts a dish in the deck', () => {
   expect(isOnOffer(data, data.recipes[0], ['lidl'])).toBe(false);
   // Lidl's rice is a catalog price, not a tilbud.
   expect(isOnOffer(data, data.recipes[2], ['lidl'])).toBe(false);
+});
+
+describe('shared packs', () => {
+  const plan = [
+    { id: 'a', recipeId: 'karry', days: 1, people: 4, staples: [] },
+    { id: 'b', recipeId: 'wok', days: 1, people: 4, staples: [] }
+  ];
+
+  it('splits a shared pack between the dishes, so their shares add up to the total', () => {
+    const list = shoppingList(data, plan, { stores: ['netto'] });
+    expect(list.shares.a + list.shares.b).toBeCloseTo(list.total);
+    // Each dish pays half of the one onion net (12 kr), not a whole net each.
+    const standalone = priceDish(data, data.recipes[1], { people: 4, days: 1, stores: ['netto'] }).total;
+    expect(list.shares.b).toBeLessThan(standalone);
+  });
+
+  it('charges a new dish only for what the week does not already buy', () => {
+    // Wok next to karry: the chicken packs grow, but the onions are already in the net.
+    const extra = addedCost(data, [plan[0]], { recipeId: 'wok', people: 4, days: 1, staples: [] }, { stores: ['netto'] });
+    const standalone = priceDish(data, data.recipes[1], { people: 4, days: 1, stores: ['netto'] }).total;
+    expect(extra).toBeLessThan(standalone);
+  });
+
+  it('suggests dishes that use what is already on the list', () => {
+    const out = suggestions(data, [plan[0]], { stores: ['netto'], people: 4 });
+    expect(out.map((s) => s.recipe.id)).toEqual(['wok']); // shares chicken and onions; risret shares only rice
+    expect(out[0].shared).toEqual(['kylling', 'loeg']);
+    expect(suggestions(data, [], { stores: ['netto'] })).toEqual([]);
+  });
+});
+
+describe('hand-added products', () => {
+  it('go in their store and count in the total', () => {
+    const extras = [{ id: 'kaffe', store: 'netto', title: 'Kaffe 400 g', price: 30, qty: 2, kind: 'tilbud' }];
+    const list = shoppingList(data, [], { stores: ['netto'], extras });
+    expect(list.total).toBe(60);
+    expect(list.groups[0].key).toBe('netto');
+    expect(list.groups[0].items[0]).toMatchObject({ id: 'x-kaffe', source: { cost: 60, packs: 2 } });
+  });
 });

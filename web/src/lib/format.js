@@ -3,6 +3,13 @@ const num1 = new Intl.NumberFormat('da-DK', { maximumFractionDigits: 1 });
 
 export const kr = (n) => `${kr0.format(Math.round(n))} kr`;
 
+// A single product's shelf price as printed: "12,95 kr".
+const kr2 = new Intl.NumberFormat('da-DK', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+export const krPrice = (n) => `${kr2.format(n)} kr`;
+
+// "agurk, tomat og salat"
+export const andList = (xs) => (xs.length < 2 ? xs.join('') : `${xs.slice(0, -1).join(', ')} og ${xs.at(-1)}`);
+
 // Per-portion prices are small, so keep one decimal below 10 kr.
 export const krSmall = (n) => (n < 10 ? `${num1.format(n)} kr` : kr(n));
 
@@ -58,3 +65,17 @@ export function updatedLabel(iso) {
 const startOfDay = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
 
 export const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+
+// A catalog product's pack size: SI amount (kg, l, pcs) → "175 g", "1,5 l", "4 stk".
+export function productSize(amount, unit) {
+  if (!(amount > 0)) return '';
+  if (unit === 'kg') return amount >= 1 ? `${num1.format(amount)} kg` : `${Math.round(amount * 1000)} g`;
+  if (unit === 'l') return amount >= 1 ? `${num1.format(amount)} l` : `${num1.format(amount * 100)} cl`;
+  return `${num1.format(amount)} stk`;
+}
+
+// "68,6 kr/kg" – only for weight and volume, where comparing makes sense.
+export function unitPrice(price, amount, unit) {
+  if (!(amount > 0) || !(price > 0) || (unit !== 'kg' && unit !== 'l')) return '';
+  return `${num1.format(price / amount)} kr/${unit}`;
+}

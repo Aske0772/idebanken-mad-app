@@ -88,9 +88,12 @@ export function portionPrice(data, recipe, stores, people = 2, atHome = []) {
 }
 
 // The week's shopping list. Needs are summed across dishes before choosing packs,
-// so two dishes with onions share one net. Items without a real price in your
-// stores go in the 'other' group.
-export function shoppingList(data, plan, { stores, atHome = [] }) {
+// so two dishes with carrots share one bag. Items without a real price in your
+// stores go in the 'other' group. extras are products the user added by hand
+// ("Tilføj vare"); they go in their store's group.
+// shares: what each plan item costs as its part of the shared packs, so the
+// dishes in the week add up to the list total instead of each paying a whole bag.
+export function shoppingList(data, plan, { stores, atHome = [], extras = [] }) {
   const recipes = Object.fromEntries(data.recipes.map((r) => [r.id, r]));
   const needs = new Map();
   let meals = 0;
@@ -102,8 +105,9 @@ export function shoppingList(data, plan, { stores, atHome = [] }) {
     for (const { id, qty } of recipe.ingredients) {
       const ing = data.ingredients[id];
       if (ing.staple && !item.staples?.includes(id)) continue;
-      const entry = needs.get(id) ?? { id, ing, need: 0, dishes: [] };
+      const entry = needs.get(id) ?? { id, ing, need: 0, dishes: [], byItem: {} };
       entry.need += qty * factor;
+      entry.byItem[item.id] = (entry.byItem[item.id] ?? 0) + qty * factor;
       if (!entry.dishes.includes(recipe.title)) entry.dishes.push(recipe.title);
       needs.set(id, entry);
     }
@@ -119,19 +123,78 @@ export function shoppingList(data, plan, { stores, atHome = [] }) {
     items.push({ ...entry, source: cheapest(data, entry.id, entry.need, stores) });
   }
 
-  const total = items.reduce((sum, i) => sum + i.source.cost, 0);
+  const shares = {};
+  for (const i of items) {
+    const perUnit = i.need > 0 ? i.source.cost / i.need : 0;
+    for (const [itemId, need] of Object.entries(i.byItem)) shares[itemId] = (shares[itemId] ?? 0) + need * perUnit;
+  }
+  const dishTotal = items.reduce((sum, i) => sum + i.source.cost, 0);
   const approx = items.reduce((sum, i) => sum + (isExact(i.source) ? 0 : i.source.cost), 0);
   const groups = new Map();
-  for (const item of items) {
-    const key = isExact(item.source) ? item.source.offer.store : 'other';
+  const groupFor = (key) => {
     const group = groups.get(key) ?? { key, items: [], total: 0 };
+    groups.set(key, group);
+    return group;
+  };
+  for (const item of items) {
+    const group = groupFor(isExact(item.source) ? item.source.offer.store : 'other');
     group.items.push(item);
     group.total += item.source.cost;
-    groups.set(key, group);
   }
-  const order = (key) => (key === 'other' ? Infinity : stores.indexOf(key));
+  const byName = (a, b) => a.ing.cat.localeCompare(b.ing.cat) || a.ing.name.localeCompare(b.ing.name);
+  for (const g of groups.values()) g.items.sort(byName);
+  // Hand-added products come after the recipe items in their store.
+  let extrasTotal = 0;
+  for (const x of extras) {
+    const cost = x.price * x.qty;
+    extrasTotal += cost;
+    const group = groupFor(x.store);
+    group.items.push({ id: `x-${x.id}`, extra: x, source: { kind: x.kind, offer: x, packs: x.qty, cost } });
+    group.total += cost;
+  }
+  // Your stores in your order, other chains after them, items without a price last.
+  const order = (key) => {
+    if (key === 'other') return Infinity;
+    const i = stores.indexOf(key);
+    return i === -1 ? stores.length : i;
+  };
   const sorted = [...groups.values()].sort((a, b) => order(a.key) - order(b.key));
-  for (const g of sorted) g.items.sort((a, b) => a.ing.cat.localeCompare(b.ing.cat) || a.ing.name.localeCompare(b.ing.name));
 
-  return { total, approx, meals, perMeal: meals ? total / meals : 0, groups: sorted, home };
+  const total = dishTotal + extrasTotal;
+  return {
+    total, dishTotal, extrasTotal, approx, meals, perMeal: meals ? dishTotal / meals : 0, groups: sorted, home, shares,
+    // Needs per ingredient and what was bought for them, for suggestions.
+    needs: Object.fromEntries(items.map((i) => [i.id, { need: i.need, bought: i.source.packs * i.source.packSize }]))
+  };
+}
+
+// What adding a dish to the week really costs: the list total with it minus the
+// list total without it. Shared packs (the carrots already in the bag) are free.
+export function addedCost(data, plan, newItem, opts) {
+  const before = shoppingList(data, plan, opts).dishTotal;
+  const after = shoppingList(data, [...plan, { id: '__new', ...newItem }], opts).dishTotal;
+  return Math.max(0, after - before);
+}
+
+// Dishes that use what the week already buys. For every dish not in the plan:
+// which of its ingredients are already on the list, and what it adds to the bill
+// for one evening. Only dishes that share at least `minShared` ingredients count;
+// cheapest per portion first.
+export function suggestions(data, plan, { stores, atHome = [], people = 2, filter = () => true, minShared = 2, limit = 3 }) {
+  if (plan.length === 0) return [];
+  const opts = { stores, atHome };
+  const base = shoppingList(data, plan, opts);
+  const planned = new Set(plan.map((p) => p.recipeId));
+  const out = [];
+  for (const recipe of data.recipes) {
+    if (planned.has(recipe.id) || !filter(recipe)) continue;
+    const shared = recipe.ingredients
+      .map(({ id }) => id)
+      .filter((id) => !data.ingredients[id].staple && (base.needs[id] || atHome.includes(id)));
+    if (shared.length < minShared) continue;
+    const after = shoppingList(data, [...plan, { id: '__new', recipeId: recipe.id, people, days: 1, staples: [] }], opts);
+    const cost = Math.max(0, after.dishTotal - base.dishTotal);
+    out.push({ recipe, shared, cost, perMeal: cost / people });
+  }
+  return out.sort((a, b) => a.perMeal - b.perMeal || b.shared.length - a.shared.length).slice(0, limit);
 }
