@@ -438,6 +438,8 @@ ul, ol { margin: 0; padding: 0; }
 .suggest-price { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; white-space: nowrap; }
 .suggest-price strong { color: var(--accent); font-variant-numeric: tabular-nums; }
 .suggest-price small { font-size: 12px; color: var(--muted); }
+/* "Bruger det, du har" on a swipe card: the light green that reads on dark glass */
+.glass-chip--reuse { color: var(--accent-on-photo); font-weight: 650; }
 .detail-shared { font-size: 13px; font-weight: 650; color: var(--accent-on-photo); }
 
 .toast {

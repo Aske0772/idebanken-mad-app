@@ -164,7 +164,7 @@ export default function App() {
       <main className="main">
         {tab === 'swipe' && (
           <SwipeView
-            data={data} prefs={prefs} setPrefs={setPrefs} seen={state.seen} past={past}
+            data={data} prefs={prefs} setPrefs={setPrefs} plan={state.plan} seen={state.seen} past={past}
             onSkip={onSkip} onLike={onLike} onUndo={onUndo} canUndo={history.length > 0}
             onOpen={(recipe) => setSheet({ recipe, mode: 'add' })}
             onStores={() => setStoresOpen(true)}
