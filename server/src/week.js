@@ -8,6 +8,7 @@ import { fetchRemaShelf, REMA_STORE_ID } from './sources/rema.js';
 import { fetchLidlShelf, LIDL_STORE_ID } from './sources/lidl.js';
 import { matchOffer } from './match.js';
 import { isFood } from './food.js';
+import { shelfCategory, SHELF_CATEGORIES } from './shelf-categories.js';
 import { DATA_DIR } from './db.js';
 
 export const IMAGE_DIR = join(DATA_DIR, 'images');
@@ -347,11 +348,14 @@ export function catalogPayload(db, week) {
     SELECT o.id, o.store_id, o.heading, o.price, o.pre_price, o.size_amount, o.size_unit, o.run_till, o.kind
     FROM offers o WHERE o.week = ? AND ${ACTIVE}
     ORDER BY o.heading
-  `).all(week, now, now).map((r) => ({
-    id: r.id, store: r.store_id, title: r.heading, price: r.price, prePrice: r.pre_price,
-    amount: r.size_amount, unit: r.size_unit, until: r.run_till, kind: r.kind,
+  `).all(week, now, now).map((r) => {
     // The recipe ingredient this product is, so an added agurk joins the agurk line.
-    ing: ingredientOf(r)
-  }));
-  return { week, generatedAt: now, items };
+    const ing = ingredientOf(r);
+    return {
+      id: r.id, store: r.store_id, title: r.heading, price: r.price, prePrice: r.pre_price,
+      amount: r.size_amount, unit: r.size_unit, until: r.run_till, kind: r.kind, ing,
+      cat: shelfCategory(r.heading, ing)
+    };
+  });
+  return { week, generatedAt: now, categories: SHELF_CATEGORIES, items };
 }

@@ -149,7 +149,7 @@ export const INGREDIENTS = {
   maelk: {
     name: 'mælk', unit: 'ml', cat: 'mejeri', normal: [1000, 13],
     match: has('(?<![a-zæøå])(sød|let|mini|skummet|kærnemælk|økologisk )?mælk(?![a-zæøå])|minimælk|letmælk|sødmælk|skummetmælk'),
-    not: has('chokolade|kakao|kokos|havre|plante|mandel|soja|ris|pulver|kærne|snitte|bøtte|is(?![a-zæøå])|drik|kondens')
+    not: has('chokolade|kakao|kokos|havre|plante|mandel|soja|ris|pulver|kærne|snitte|bøtte|is(?![a-zæøå])|drik|kondens|brød|bolle')
   },
   kokosmaelk: {
     name: 'kokosmælk', unit: 'ml', cat: 'kolonial', normal: [400, 12],

@@ -73,7 +73,7 @@ test('the catalog holds every food item valid now, also those no recipe uses', a
   assert.ok(!ids.includes('expired') && !ids.includes('future'));
   assert.deepEqual(items.find((i) => i.id === 'b'), {
     id: 'b', store: '9ba51', title: 'Lays chips', price: 12, prePrice: null,
-    amount: 0.175, unit: 'kg', until: items.find((i) => i.id === 'b').until, kind: 'tilbud', ing: null
+    amount: 0.175, unit: 'kg', until: items.find((i) => i.id === 'b').until, kind: 'tilbud', ing: null, cat: 'snacks'
   });
   // A product that is a recipe ingredient says which, so it can join that line on the list.
   assert.ok(items.some((i) => i.ing === 'ris'), 'rice on the shelf is the ingredient ris');
