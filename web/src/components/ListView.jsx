@@ -82,7 +82,7 @@ export function ListView({ data, list, checked, stores, countOf, onCheck, onStep
         </div>
       )}
 
-      <AddItem stores={stores} storesById={storesById} countOf={countOf} onStep={onStepProduct} />
+      <AddItem stores={stores} storesById={storesById} ingredients={data.ingredients} countOf={countOf} onStep={onStepProduct} />
 
       {list.groups.map((g) => {
         const store = storesById[g.key];

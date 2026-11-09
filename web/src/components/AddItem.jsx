@@ -4,36 +4,71 @@ import { krPrice, productSize, unitPrice, sourceParts } from '../lib/format.js';
 import { Plus } from './icons.jsx';
 import { Qty } from './Qty.jsx';
 
+// Shown before the catalog has loaded; the catalog sends the same list.
+const FALLBACK_CATS = {
+  gront: 'Frugt & grønt', kod: 'Kød', fisk: 'Fisk', mejeri: 'Mejeri & æg', brod: 'Brød',
+  kolonial: 'Kolonial', frost: 'Frost', drikke: 'Drikke', snacks: 'Snacks & søde sager'
+};
 const LIMIT = 30;
 const norm = (s) => s.toLocaleLowerCase('da-DK');
+const wordsOf = (s) => norm(s).split(/[^a-zæøåäöü0-9]+/).filter(Boolean);
+
+// How well a product name answers one search word, best first:
+// 0 a whole word or the end of one ("letmælk" for mælk), or the end of the search
+//   word itself ("druer" for vindruer); 1 the start of a word ("mælkesnitte");
+// 2 anywhere in the name. null: no match.
+function wordScore(title, titleWords, w) {
+  if (titleWords.some((t) => t === w || (t.endsWith(w) && w.length >= 3) || (t.length >= 4 && w.endsWith(t)))) return 0;
+  if (titleWords.some((t) => t.startsWith(w))) return 1;
+  return title.includes(w) ? 2 : null;
+}
 
 // "Tilføj vare": search every food item in your stores this week and put it on
-// the list yourself, for what no recipe covers (coffee, oats, a snack).
+// the list yourself, for what no recipe covers (coffee, oats, a snack). The aisle
+// chips narrow the search, or show an aisle on their own.
 // countOf(product) → { n, home }: how many are on the list, also as part of a dish line.
-export function AddItem({ stores, storesById, countOf, onStep }) {
+export function AddItem({ stores, storesById, ingredients, countOf, onStep }) {
   const [query, setQuery] = useState('');
-  const [items, setItems] = useState(null);
+  const [cat, setCat] = useState(null);
+  const [catalog, setCatalog] = useState(null);
   const [error, setError] = useState('');
 
-  // The catalog is big, so it is fetched the first time the field is used.
+  // The catalog is big, so it is fetched the first time the field or a chip is used.
   const load = () => {
-    if (items) return;
+    if (catalog) return;
     setError('');
-    fetchCatalog().then((c) => setItems(c.items)).catch((e) => setError(e.message));
+    fetchCatalog().then(setCatalog).catch((e) => setError(e.message));
   };
+  const items = catalog?.items ?? null;
 
-  const words = norm(query).split(/\s+/).filter(Boolean);
+  const words = wordsOf(query);
+  const active = words.length > 0 || cat != null;
   const { hits, more } = useMemo(() => {
-    if (!items || words.length === 0) return { hits: [], more: 0 };
-    const found = items.filter((i) => stores.includes(i.store) && words.every((w) => norm(i.title).includes(w)));
-    // Names that start with the search first, then tilbud, then the lowest price per kg/l.
-    const starts = (i) => (norm(i.title).startsWith(words[0]) ? 0 : 1);
+    if (!items || !active) return { hits: [], more: 0 };
+    const found = [];
+    for (const i of items) {
+      if (!stores.includes(i.store) || (cat && i.cat !== cat)) continue;
+      const title = norm(i.title);
+      const tw = wordsOf(i.title);
+      let score = 0;
+      for (const w of words) {
+        const s = wordScore(title, tw, w);
+        if (s == null) { score = null; break; }
+        score += s;
+      }
+      if (score == null) continue;
+      // The real thing first: Letmælk is the ingredient mælk, Mælkesnitte is not.
+      const ing = i.ing ? norm(ingredients[i.ing]?.name ?? '') : '';
+      const isIngredient = ing && words.some((w) => ing.startsWith(w) || w.endsWith(ing));
+      found.push({ i, rank: (isIngredient ? 0 : 1) * 10 + score });
+    }
     const per = (i) => (i.amount > 0 && (i.unit === 'kg' || i.unit === 'l') ? i.price / i.amount : i.price);
-    found.sort((a, b) => starts(a) - starts(b) || (a.kind !== 'tilbud') - (b.kind !== 'tilbud') || per(a) - per(b));
-    return { hits: found.slice(0, LIMIT), more: Math.max(0, found.length - LIMIT) };
+    found.sort((a, b) => a.rank - b.rank || (a.i.kind !== 'tilbud') - (b.i.kind !== 'tilbud') || per(a.i) - per(b.i));
+    return { hits: found.slice(0, LIMIT).map((f) => f.i), more: Math.max(0, found.length - LIMIT) };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [items, query, stores]);
+  }, [items, query, cat, stores]);
 
+  const cats = Object.entries(catalog?.categories ?? FALLBACK_CATS);
 
   return (
     <section className="add-item" aria-label="Tilføj vare">
@@ -43,10 +78,23 @@ export function AddItem({ stores, storesById, countOf, onStep }) {
         aria-label="Søg efter en vare i dine butikker" enterKeyHint="search" autoComplete="off"
         value={query} onFocus={load} onChange={(e) => { setQuery(e.target.value); load(); }}
       />
+      <div className="add-cats" role="group" aria-label="Kategorier">
+        {cats.map(([id, name]) => (
+          <button
+            key={id} type="button" className={`add-cat ${cat === id ? 'is-on' : ''}`} aria-pressed={cat === id}
+            onClick={() => { setCat(cat === id ? null : id); load(); }}
+          >
+            {name}
+          </button>
+        ))}
+      </div>
       {error && <p className="shop-group-hint">{error}</p>}
-      {words.length > 0 && !items && !error && <p className="shop-group-hint">Henter varer …</p>}
-      {items && words.length > 0 && hits.length === 0 && (
-        <p className="shop-group-hint">Ingen varer i dine butikker hedder noget med "{query}".</p>
+      {active && !items && !error && <p className="shop-group-hint">Henter varer …</p>}
+      {items && active && hits.length === 0 && (
+        <p className="shop-group-hint">
+          {words.length ? `Ingen varer i dine butikker hedder noget med "${query}"` : 'Ingen varer her i dine butikker'}
+          {cat && words.length ? ` under ${catalog.categories?.[cat] ?? 'kategorien'}.` : '.'}
+        </p>
       )}
       {hits.length > 0 && (
         <ul className="shop-items">
@@ -75,7 +123,7 @@ export function AddItem({ stores, storesById, countOf, onStep }) {
           })}
         </ul>
       )}
-      {more > 0 && <p className="shop-group-hint">{more} varer mere. Skriv mere for at finde den rigtige.</p>}
+      {more > 0 && <p className="shop-group-hint">{more} varer mere. {words.length ? 'Skriv mere' : 'Søg'} for at finde den rigtige.</p>}
     </section>
   );
 }
