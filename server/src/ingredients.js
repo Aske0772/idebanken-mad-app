@@ -128,7 +128,7 @@ export const INGREDIENTS = {
   rejer: {
     name: 'rejer', unit: 'g', cat: 'fisk', normal: [400, 45], minAmount: 150,
     match: has('rejer|tigerreje|kæmpereje'),
-    not: has('chips|salat|cocktail|tempura|dim ?sum|wonton|surimi|krabbe|pålæg|sandwich|nudel|sushi|tærte')
+    not: has('chips|salat|cocktail|tempura|dim ?sum|wonton|surimi|krabbe|pålæg|sandwich|nudel|sushi|tærte|panere|indbagt|m\/rejer|med rejer|sild')
   },
   // Mejeri & æg
   aeg: {
