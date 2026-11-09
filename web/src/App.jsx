@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { fetchWeek } from './lib/api.js';
 import { usePersistent } from './lib/persist.js';
 import { shoppingList } from './lib/pricing.js';
 import { archiveWeek } from './lib/rank.js';
+import { moveItem } from './lib/week.js';
 import { Onboarding } from './components/Onboarding.jsx';
 import { SwipeView } from './components/SwipeView.jsx';
 import { DishDetail } from './components/DishDetail.jsx';
@@ -15,6 +16,7 @@ import { Cards, Calendar, List } from './components/icons.jsx';
 const PREFS = { onboarded: false, stores: [], people: 2, diet: 'alle', atHome: [], saved: [] };
 // Weekly state is tagged with the ISO week and starts fresh when the avis changes.
 // extras: products added by hand in "Tilføj vare" ({ id, store, title, price, amount, unit, kind, until, qty }).
+// plan items: { id, recipeId, days, people, staples, day? } – day 0 = Monday, see lib/week.js.
 const WEEK = { week: null, plan: [], seen: [], checked: [], extras: [] };
 // Dishes planned in earlier weeks, so the deck can rest them for a while. Stays on the phone.
 const PAST = { weeks: {} };
@@ -30,6 +32,7 @@ export default function App() {
   const [sheet, setSheet] = useState(null); // { recipe, item?, mode, fromSwipe? }
   const [storesOpen, setStoresOpen] = useState(false);
   const [history, setHistory] = useState([]);
+  const mainRef = useRef(null);
 
   useEffect(() => {
     let fetchedAt = 0;
@@ -90,12 +93,15 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sheet]);
 
-  const confirm = ({ days, people, staples }) => {
+  // day: the evening picked in the dish view, or null to take the first free one.
+  const confirm = ({ days, people, staples, day }) => {
     const { recipe, item } = sheet;
     setState((s) => {
-      const plan = item
+      const id = item?.id ?? crypto.randomUUID();
+      let plan = item
         ? s.plan.map((p) => (p.id === item.id ? { ...p, days, people, staples } : p))
-        : [...s.plan, { id: crypto.randomUUID(), recipeId: recipe.id, days, people, staples }];
+        : [...s.plan, { id, recipeId: recipe.id, days, people, staples }];
+      if (day != null) plan = moveItem(plan, id, day);
       const seen = s.seen.includes(recipe.id) ? s.seen : [...s.seen, recipe.id];
       return { ...s, plan, seen };
     });
@@ -161,7 +167,7 @@ export default function App() {
 
   return (
     <div className="app">
-      <main className="main">
+      <main className="main" ref={mainRef}>
         {tab === 'swipe' && (
           <SwipeView
             data={data} prefs={prefs} setPrefs={setPrefs} plan={state.plan} seen={state.seen} past={past}
@@ -173,8 +179,9 @@ export default function App() {
         )}
         {tab === 'week' && (
           <WeekView
-            data={data} plan={state.plan} prefs={prefs} list={list}
+            data={data} plan={state.plan} prefs={prefs} list={list} scroller={mainRef}
             onOpen={(recipe, item) => setSheet({ recipe, item, mode: 'edit' })}
+            onMove={(id, day) => setState((s) => ({ ...s, plan: moveItem(s.plan, id, day) }))}
             onSuggest={(recipe) => setSheet({ recipe, mode: 'add' })}
             onSwipe={() => setTab('swipe')}
           />
