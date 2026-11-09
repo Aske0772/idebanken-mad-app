@@ -2,6 +2,7 @@
 
 Nyeste øverst. Sæt kryds, når en fejl er rettet.
 
+- [ ] 2026-11-09 · Indkøb · Når man søger på ting og har tilføjet, kan man ikke minus igen. (Tilføj vare: søgning på "Surdejs", Surdejsboller viser "1" i den grønne knap, men der er ingen −.) [Billede 1](fejl/2026-11-09-sogminus-1.jpg)
 - [ ] 2026-11-09 · Indkøb · Note (ikke en fejl): Uoverskueligt at handle, når der ikke er billeder.
 - [ ] 2026-11-09 · Indkøb · Der kommer ingen vindruer frem. (Tilføj vare: søgning på "Vindruer" giver "Ingen varer i dine butikker hedder noget med \"Vindruer\"".) [Billede 1](fejl/2026-11-09-vindruer-1.jpg)
 - [ ] 2026-11-09 · Indkøb · Vi skal have lavet kategorier på en smart måde, men stadig beholde søgemekanismen. **Note: Claude skal planlægge, hvordan det kan gøres smart og stadig opretholde den nuværende designstil.** (Tilføj vare: søgning på "Mælk" viser Mælkesnitte, kokosmælk og Kinder mælkesnitte øverst.) [Billede 1](fejl/2026-11-09-kategorier-1.jpg)
