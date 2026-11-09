@@ -397,13 +397,14 @@ export const RECIPES = [
     hero: ['aeg', 'feta'],
     ingredients: [
       ['aeg', 8], ['kartofler', 600], ['spinat', 150], ['loeg', 1], ['feta', 150],
-      ['salat', 150], ['olie', 15], ['salt', 3], ['peber', 1]
+      ['tomater', 500], ['forarsloeg', 2], ['eddike', 15], ['olie', 45], ['salt', 4], ['peber', 1]
     ],
     steps: [
       'Kog kartoflerne og skær dem i skiver.',
       'Steg løg og kartofler i en ovnfast pande, tilsæt spinat.',
       'Hæld sammenpiskede æg over og smuldr feta på.',
-      'Bag 15 min ved 200°. Server med salat.'
+      'Bag 15 min ved 200°.',
+      'Tomatsalat imens: skær tomaterne i skiver og forårsløg i tynde ringe. Dryp med 2 spsk olie, 1 spsk eddike, salt og peber, og lad den trække til frittataen er færdig.'
     ]
   },
   {
@@ -482,14 +483,15 @@ export const RECIPES = [
     minutes: 80, diet: 'kod', serves: 4, emoji: '🐔', hue: 44,
     hero: ['hel_kylling'],
     ingredients: [
-      ['hel_kylling', 1400], ['kartofler', 1000], ['citron', 1], ['hvidloeg', 4], ['salat', 150],
-      ['olie', 30], ['timian', 2], ['salt', 6], ['peber', 1]
+      ['hel_kylling', 1400], ['kartofler', 1000], ['citron', 2], ['hvidloeg', 4], ['salat', 150],
+      ['aerter', 200], ['agurk', 1], ['olie', 60], ['timian', 2], ['salt', 7], ['peber', 1]
     ],
     steps: [
-      'Fyld kyllingen med citron og hvidløg. Gnid den med olie, salt og timian.',
+      'Fyld kyllingen med en citron og hvidløg. Gnid den med olie, salt og timian.',
       'Læg kartofler omkring den i bradepanden.',
       'Steg 70 min ved 200°, til saften er klar.',
-      'Lad den hvile 10 min og server med salat.'
+      'Salat med ærter imens: hæld kogende vand over ærterne og lad dem dræne. Riv salaten, skær agurken i halvmåner, og vend det hele med saft af den anden citron, 2 spsk olie, salt og peber.',
+      'Lad kyllingen hvile 10 min og server med kartofler og salaten.'
     ]
   },
   {
@@ -709,15 +711,16 @@ export const RECIPES = [
     minutes: 55, diet: 'kod', serves: 4, emoji: '🍋', hue: 52,
     hero: ['kyllingelaar'],
     ingredients: [
-      ['kyllingelaar', 1000], ['kartofler', 1000], ['citron', 1], ['hvidloeg', 4], ['loeg', 2],
-      ['timian', 3], ['olie', 30], ['salat', 150], ['salt', 5], ['peber', 1]
+      ['kyllingelaar', 1000], ['kartofler', 1000], ['citron', 2], ['hvidloeg', 4], ['loeg', 2],
+      ['timian', 3], ['olie', 60], ['salat', 150], ['agurk', 1], ['tomater', 250], ['honning', 5],
+      ['salt', 6], ['peber', 1]
     ],
     steps: [
       'Tænd ovnen på 200 °C.',
       'Skær kartofler i både og løg i kvarte. Vend dem med olie, timian, salt og peber i et fad.',
       'Læg kyllingelårene ovenpå med hvidløg og citronbåde.',
       'Bag i 45 min, til skindet er sprødt.',
-      'Server med en grøn salat.'
+      'Salat imens: riv salaten, skær agurk og tomater i både. Rør saft af en citron med 2 spsk olie, 1 tsk honning, salt og peber, og vend salaten i lige før servering.'
     ]
   },
   {
@@ -782,15 +785,16 @@ export const RECIPES = [
     minutes: 50, diet: 'kod', serves: 4, emoji: '🫑', hue: 4,
     hero: ['hakket_okse', 'peberfrugt'],
     ingredients: [
-      ['hakket_okse', 400], ['peberfrugt', 4], ['ris', 150], ['loeg', 1], ['hvidloeg', 2],
-      ['hakkede_tomater', 400], ['revet_ost', 100], ['oregano', 2], ['salat', 150], ['salt', 4], ['peber', 1]
+      ['hakket_okse', 400], ['peberfrugt', 4], ['ris', 150], ['loeg', 1], ['hvidloeg', 3],
+      ['hakkede_tomater', 400], ['revet_ost', 100], ['oregano', 2], ['salat', 150], ['agurk', 1],
+      ['yoghurt', 150], ['salt', 5], ['peber', 1]
     ],
     steps: [
       'Tænd ovnen på 200 °C, og kog risene.',
-      'Brun kødet med løg og hvidløg, og tilsæt hakkede tomater og oregano. Simr 10 min, og rør risene i.',
+      'Brun kødet med løg og 2 fed hvidløg, og tilsæt hakkede tomater og oregano. Simr 10 min, og rør risene i.',
       'Halvér peberfrugterne på langs og fjern kernerne.',
       'Fyld dem med kødet, drys med ost og bag 25 min.',
-      'Server med salat.'
+      'Salat imens: riv salaten og skær agurken i tern. Rør yoghurten med et presset fed hvidløg, salt og peber, og vend det i lige før servering.'
     ]
   },
   {
