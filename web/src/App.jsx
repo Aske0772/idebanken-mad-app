@@ -17,7 +17,8 @@ const PREFS = { onboarded: false, stores: [], people: 2, diet: 'alle', atHome: [
 // Weekly state is tagged with the ISO week and starts fresh when the avis changes.
 // extras: products added by hand in "Tilføj vare" ({ id, store, title, price, amount, unit, kind, until, qty }).
 // plan items: { id, recipeId, days, people, staples, day? } – day 0 = Monday, see lib/week.js.
-const WEEK = { week: null, plan: [], seen: [], checked: [], extras: [] };
+// adjust: packs bought beyond what the dishes need, per ingredient (+ and − on the list).
+const WEEK = { week: null, plan: [], seen: [], checked: [], extras: [], adjust: {} };
 // Dishes planned in earlier weeks, so the deck can rest them for a while. Stays on the phone.
 const PAST = { weeks: {} };
 
@@ -64,8 +65,8 @@ export default function App() {
   }, [data, state.week, state.plan, setState, setPast]);
 
   const list = useMemo(
-    () => (data ? shoppingList(data, state.plan, { stores: prefs.stores, atHome: prefs.atHome, extras: state.extras }) : null),
-    [data, state.plan, prefs.stores, prefs.atHome, state.extras]
+    () => (data ? shoppingList(data, state.plan, { stores: prefs.stores, atHome: prefs.atHome, extras: state.extras, adjust: state.adjust }) : null),
+    [data, state.plan, prefs.stores, prefs.atHome, state.extras, state.adjust]
   );
 
   const markSeen = (id) => setState((s) => ({ ...s, seen: [...s.seen, id] }));
@@ -131,7 +132,7 @@ export default function App() {
     const extras = found
       ? s.extras.map((x) => (x.id === item.id ? { ...x, qty: x.qty + 1 } : x))
       : [...s.extras, { id: item.id, store: item.store, title: item.title, price: item.price, amount: item.amount,
-          unit: item.unit, kind: item.kind, until: item.until, qty: 1 }];
+          unit: item.unit, kind: item.kind, until: item.until, ing: item.ing ?? null, qty: 1 }];
     return { ...s, extras };
   });
   const removeExtra = (id) => setState((s) => ({
@@ -139,6 +140,33 @@ export default function App() {
     extras: s.extras.flatMap((x) => (x.id !== id ? [x] : x.qty > 1 ? [{ ...x, qty: x.qty - 1 }] : [])),
     checked: s.checked.filter((c) => c !== `x-${id}`)
   }));
+
+  // + and − on the list. A dish's ingredient never goes below one pack: the last −
+  // means "har det hjemme". Basisvarer stop at one.
+  const atHome = (id) => {
+    setPrefs((p) => ({ ...p, atHome: [...p.atHome, id] }));
+    setState((s) => ({ ...s, adjust: { ...s.adjust, [id]: 0 } }));
+  };
+  const step = (item, d) => {
+    if (item.extra) return d > 0 ? addExtra(item.extra) : removeExtra(item.extra.id);
+    if (d < 0 && item.source.packs <= 1) return item.ing.staple ? undefined : atHome(item.id);
+    setState((s) => ({ ...s, adjust: { ...s.adjust, [item.id]: (s.adjust?.[item.id] ?? 0) + d } }));
+  };
+  // A product from the search that a dish line already buys counts on that line,
+  // so adding the same agurk gives "3 × Agurk" instead of a second row.
+  const lines = list ? list.groups.flatMap((g) => g.items) : [];
+  const lineOf = (productId) => lines.find((i) => !i.extra && i.source.offer?.id === productId);
+  const countOf = (product) => {
+    const line = lineOf(product.id);
+    if (line) return { n: line.source.packs, home: !line.ing.staple };
+    return { n: state.extras.find((x) => x.id === product.id)?.qty ?? 0, home: false };
+  };
+  const stepProduct = (product, d) => {
+    const line = lineOf(product.id);
+    if (line) return step(line, d);
+    if (d > 0) addExtra(product);
+    else removeExtra(product.id);
+  };
 
   const toggleIn = (list, id) => (list.includes(id) ? list.filter((x) => x !== id) : [...list, id]);
 
@@ -188,10 +216,9 @@ export default function App() {
         )}
         {tab === 'list' && (
           <ListView
-            data={data} list={list} checked={state.checked} stores={prefs.stores} extras={state.extras}
-            onAddExtra={addExtra} onRemoveExtra={removeExtra}
+            data={data} list={list} checked={state.checked} stores={prefs.stores}
+            countOf={countOf} onStep={step} onStepProduct={stepProduct}
             onCheck={(id) => setState((s) => ({ ...s, checked: toggleIn(s.checked, id) }))}
-            onAtHome={(id) => setPrefs((p) => ({ ...p, atHome: [...p.atHome, id] }))}
             onBackHome={(id) => setPrefs((p) => ({ ...p, atHome: p.atHome.filter((x) => x !== id) }))}
           />
         )}

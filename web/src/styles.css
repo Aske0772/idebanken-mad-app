@@ -443,6 +443,18 @@ ul, ol { margin: 0; padding: 0; }
   position: relative; z-index: 1; flex: none; width: 34px; height: 34px; border-radius: 50%;
   display: grid; place-items: center; color: var(--muted);
 }
+.shop-side { position: relative; z-index: 1; flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+/* − n + : the same round grey buttons as "Tilføj vare", green once something is added there. */
+.qty {
+  flex: none; display: inline-flex; align-items: center; gap: 2px; padding: 3px; border-radius: 999px;
+  background: var(--surface-2); color: var(--ink);
+}
+.qty button { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; color: inherit; }
+.qty button:active { background: rgba(0, 0, 0, 0.08); }
+.qty button:disabled { opacity: 0.3; }
+.qty-n { min-width: 18px; text-align: center; font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.qty.is-accent { background: var(--accent); color: var(--accent-ink); }
+.qty.is-accent button:active { background: rgba(255, 255, 255, 0.16); }
 .shop-home-list { list-style: none; display: flex; flex-wrap: wrap; gap: 6px; }
 .shop-pill {
   display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 12px; border-radius: 999px;

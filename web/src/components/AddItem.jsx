@@ -2,13 +2,15 @@ import { useMemo, useState } from 'react';
 import { fetchCatalog } from '../lib/api.js';
 import { krPrice, productSize, unitPrice, sourceParts } from '../lib/format.js';
 import { Plus } from './icons.jsx';
+import { Qty } from './Qty.jsx';
 
 const LIMIT = 30;
 const norm = (s) => s.toLocaleLowerCase('da-DK');
 
 // "Tilføj vare": search every food item in your stores this week and put it on
 // the list yourself, for what no recipe covers (coffee, oats, a snack).
-export function AddItem({ stores, storesById, extras, onAdd }) {
+// countOf(product) → { n, home }: how many are on the list, also as part of a dish line.
+export function AddItem({ stores, storesById, countOf, onStep }) {
   const [query, setQuery] = useState('');
   const [items, setItems] = useState(null);
   const [error, setError] = useState('');
@@ -32,7 +34,6 @@ export function AddItem({ stores, storesById, extras, onAdd }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [items, query, stores]);
 
-  const inList = Object.fromEntries(extras.map((x) => [x.id, x.qty]));
 
   return (
     <section className="add-item" aria-label="Tilføj vare">
@@ -50,7 +51,7 @@ export function AddItem({ stores, storesById, extras, onAdd }) {
       {hits.length > 0 && (
         <ul className="shop-items">
           {hits.map((i) => {
-            const n = inList[i.id] ?? 0;
+            const { n, home } = countOf(i);
             const { store, note } = sourceParts({ kind: i.kind, offer: i }, storesById);
             return (
               <li key={i.id} className="shop-item">
@@ -62,12 +63,13 @@ export function AddItem({ stores, storesById, extras, onAdd }) {
                   <span className={`shop-kind ${i.kind}`}>{[store, note].filter(Boolean).join(' · ')}</span>
                 </span>
                 <span className="shop-price">{krPrice(i.price)}</span>
-                <button
-                  type="button" className={`add-btn ${n ? 'is-on' : ''}`} onClick={() => onAdd(i)}
-                  aria-label={n ? `Tilføj én ${i.title} mere, ${n} på listen` : `Tilføj ${i.title} til listen`}
-                >
-                  {n ? <span className="add-count">{n}</span> : <Plus size={18} />}
-                </button>
+                {n ? (
+                  <Qty n={n} label={i.title} atMin={home ? 'home' : 'remove'} accent onStep={(d) => onStep(i, d)} />
+                ) : (
+                  <button type="button" className="add-btn" onClick={() => onStep(i, 1)} aria-label={`Tilføj ${i.title} til listen`}>
+                    <Plus size={18} />
+                  </button>
+                )}
               </li>
             );
           })}

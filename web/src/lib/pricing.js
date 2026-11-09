@@ -18,16 +18,26 @@ export function offersFor(data, ingredientId, stores) {
   return (data.offers[ingredientId] ?? []).filter((o) => stores.includes(o.store));
 }
 
+// A bigger pack wins over the cheapest total when it costs only a little more and
+// is clearly cheaper per kg/l: 1 l milk rather than 2 × 0,25 l, a bag of carrots
+// rather than four loose ones.
+const BIGGER_PACK_KR = 4;
+const BIGGER_PACK_SHARE = 0.3;
+const BIGGER_PACK_UNIT = 0.75;
+
 const best = (candidates, need, kindOf) => {
-  let winner = null;
-  for (const offer of candidates) {
+  const options = candidates.map((offer) => {
     const packs = packsFor(need, offer.amount);
-    const cost = packs * offer.price;
-    if (!winner || cost < winner.cost - EPS) {
-      winner = { kind: kindOf(offer), offer, packs, packSize: offer.amount, cost };
-    }
-  }
-  return winner;
+    return { offer, packs, cost: packs * offer.price, per: offer.price / offer.amount };
+  });
+  if (options.length === 0) return null;
+  const cheapestTotal = options.reduce((a, b) => (b.cost < a.cost - EPS ? b : a));
+  const room = Math.max(BIGGER_PACK_KR, cheapestTotal.cost * BIGGER_PACK_SHARE);
+  const better = options
+    .filter((o) => o.cost - cheapestTotal.cost <= room + EPS && o.per <= cheapestTotal.per * BIGGER_PACK_UNIT)
+    .sort((a, b) => a.per - b.per || a.cost - b.cost)[0];
+  const w = better ?? cheapestTotal;
+  return { kind: kindOf(w.offer), offer: w.offer, packs: w.packs, packSize: w.offer.amount, cost: w.cost };
 };
 
 // Cheapest way to buy `need` units at a real price in your stores; otherwise the
@@ -93,7 +103,9 @@ export function portionPrice(data, recipe, stores, people = 2, atHome = []) {
 // ("Tilføj vare"); they go in their store's group.
 // shares: what each plan item costs as its part of the shared packs, so the
 // dishes in the week add up to the list total instead of each paying a whole bag.
-export function shoppingList(data, plan, { stores, atHome = [], extras = [] }) {
+// adjust: packs bought beyond (or below) what the dishes need, per ingredient,
+// from + and − on the list. Never below one pack; dish prices ignore it.
+export function shoppingList(data, plan, { stores, atHome = [], extras = [], adjust = {} }) {
   const recipes = Object.fromEntries(data.recipes.map((r) => [r.id, r]));
   const needs = new Map();
   let meals = 0;
@@ -129,6 +141,16 @@ export function shoppingList(data, plan, { stores, atHome = [], extras = [] }) {
     for (const [itemId, need] of Object.entries(i.byItem)) shares[itemId] = (shares[itemId] ?? 0) + need * perUnit;
   }
   const dishTotal = items.reduce((sum, i) => sum + i.source.cost, 0);
+  // + and − on a dish line change its packs; the difference is counted as extra shopping.
+  let adjustTotal = 0;
+  for (const i of items) {
+    const d = Math.round(adjust[i.id] ?? 0);
+    if (!d) continue;
+    const packs = Math.max(1, i.source.packs + d);
+    const cost = (i.source.cost / i.source.packs) * packs;
+    adjustTotal += cost - i.source.cost;
+    i.source = { ...i.source, packs, cost, adjusted: packs - (i.source.packs) };
+  }
   const approx = items.reduce((sum, i) => sum + (isExact(i.source) ? 0 : i.source.cost), 0);
   const groups = new Map();
   const groupFor = (key) => {
@@ -143,13 +165,21 @@ export function shoppingList(data, plan, { stores, atHome = [], extras = [] }) {
   }
   const byName = (a, b) => a.ing.cat.localeCompare(b.ing.cat) || a.ing.name.localeCompare(b.ing.name);
   for (const g of groups.values()) g.items.sort(byName);
-  // Hand-added products come after the recipe items in their store.
-  let extrasTotal = 0;
+  // Hand-added products come after the recipe items in their store, except one of
+  // an ingredient already on the list (another brand of agurk): it goes right below it.
+  let extrasTotal = adjustTotal;
   for (const x of extras) {
     const cost = x.price * x.qty;
     extrasTotal += cost;
     const group = groupFor(x.store);
-    group.items.push({ id: `x-${x.id}`, extra: x, source: { kind: x.kind, offer: x, packs: x.qty, cost } });
+    const row = { id: `x-${x.id}`, extra: x, source: { kind: x.kind, offer: x, packs: x.qty, cost } };
+    let at = -1;
+    if (x.ing) for (let k = group.items.length - 1; k >= 0 && at === -1; k--) {
+      const it = group.items[k];
+      if (it.id === x.ing || it.extra?.ing === x.ing) at = k + 1;
+    }
+    if (at === -1) group.items.push(row);
+    else group.items.splice(at, 0, row);
     group.total += cost;
   }
   // Your stores in your order, other chains after them, items without a price last.

@@ -1,20 +1,34 @@
 import { useState } from 'react';
-import { Check, Home, Minus, Share, Undo } from './icons.jsx';
+import { Check, Share, Undo } from './icons.jsx';
+import { Qty } from './Qty.jsx';
 import { isExact } from '../lib/pricing.js';
 import { kr, packSize, productSize, capitalize, sourceParts, updatedLabel } from '../lib/format.js';
 import { AddItem } from './AddItem.jsx';
 
-export function ListView({ data, list, checked, stores, extras, onCheck, onAtHome, onBackHome, onAddExtra, onRemoveExtra }) {
+export function ListView({ data, list, checked, stores, countOf, onCheck, onStep, onStepProduct, onBackHome }) {
   const storesById = Object.fromEntries(data.stores.map((s) => [s.id, s]));
   const [toast, setToast] = useState('');
 
-  const product = (i) => {
-    if (i.extra) {
-      const size = productSize(i.extra.amount, i.extra.unit);
-      return size ? `${i.extra.qty} × ${size}` : `${i.extra.qty} stk`;
-    }
-    return i.source.offer ? `${i.source.packs} × ${i.source.offer.title}` : `${i.source.packs} × ${packSize(i.source.packSize, i.ing)}`;
+  // What one pack is, as printed: "Letmælk · 1 l". The stepper shows how many.
+  const pack = (i) => {
+    if (i.extra) return productSize(i.extra.amount, i.extra.unit);
+    const o = i.source.offer;
+    const size = o?.size ? productSize(o.size, o.sizeUnit) : packSize(i.source.packSize, i.ing);
+    // The product name only when it says more than the ingredient ("Letmælk" under Mælk, not "Agurk" under Agurk).
+    const title = o && o.title.toLocaleLowerCase('da-DK') !== i.ing.name.toLocaleLowerCase('da-DK') ? o.title : null;
+    return [title, size].filter(Boolean).join(' · ');
   };
+  // "i alt 2 kg" when more than one pack is bought.
+  const totalOf = (i) => {
+    const n = i.source.packs;
+    if (n <= 1) return '';
+    const o = i.extra ?? i.source.offer;
+    const amount = i.extra ? o.amount : o?.size;
+    const unit = i.extra ? o.unit : o?.sizeUnit;
+    if (amount > 0 && unit !== 'pcs') return `i alt ${productSize(amount * n, unit)}`;
+    return '';
+  };
+  const product = (i) => `${i.source.packs} × ${pack(i)}`;
   const nameOf = (i) => (i.extra ? i.extra.title : capitalize(i.ing.name));
 
   const share = async () => {
@@ -68,7 +82,7 @@ export function ListView({ data, list, checked, stores, extras, onCheck, onAtHom
         </div>
       )}
 
-      <AddItem stores={stores} storesById={storesById} extras={extras} onAdd={onAddExtra} />
+      <AddItem stores={stores} storesById={storesById} countOf={countOf} onStep={onStepProduct} />
 
       {list.groups.map((g) => {
         const store = storesById[g.key];
@@ -97,22 +111,16 @@ export function ListView({ data, list, checked, stores, extras, onCheck, onAtHom
                     </button>
                     <span className="shop-text">
                       <span className="shop-name">{nameOf(i)}</span>
-                      <span className="shop-product">{product(i)}</span>
+                      <span className="shop-product">{[pack(i), totalOf(i)].filter(Boolean).join(' · ')}</span>
                       <span className={`shop-kind ${i.source.kind}`}>{store ? note : [where, note].filter(Boolean).join(' · ')}</span>
                     </span>
-                    <span className="shop-price">{isExact(i.source) ? '' : 'ca. '}{kr(i.source.cost)}</span>
-                    {i.extra ? (
-                      <button
-                        type="button" className="shop-home" onClick={() => onRemoveExtra(i.extra.id)}
-                        aria-label={i.extra.qty > 1 ? `Én ${i.extra.title} mindre` : `Fjern ${i.extra.title} fra listen`}
-                      >
-                        <Minus size={17} />
-                      </button>
-                    ) : !i.ing.staple && (
-                      <button type="button" className="shop-home" aria-label={`Har ${i.ing.name} hjemme`} onClick={() => onAtHome(i.id)}>
-                        <Home size={17} />
-                      </button>
-                    )}
+                    <span className="shop-side">
+                      <span className="shop-price">{isExact(i.source) ? '' : 'ca. '}{kr(i.source.cost)}</span>
+                      <Qty
+                        n={i.source.packs} label={i.extra ? i.extra.title : i.ing.name}
+                        atMin={i.extra ? 'remove' : i.ing.staple ? 'stop' : 'home'} onStep={(d) => onStep(i, d)}
+                      />
+                    </span>
                   </li>
                 );
               })}

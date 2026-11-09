@@ -267,7 +267,7 @@ export function weekPayload(db, week) {
   const offers = {};
   const rows = db.prepare(`
     SELECT m.ingredient_id, m.amount, m.assumed, o.id, o.store_id, o.heading, o.price,
-           o.pre_price, o.run_from, o.run_till, o.kind
+           o.pre_price, o.run_from, o.run_till, o.kind, o.size_amount, o.size_unit
     FROM offer_matches m JOIN offers o ON o.id = m.offer_id AND o.week = m.week
     WHERE m.week = ? AND ${ACTIVE}
   `).all(week, now, now);
@@ -275,7 +275,9 @@ export function weekPayload(db, week) {
   for (const r of rows) {
     const entry = {
       id: r.id, store: r.store_id, title: r.heading, price: r.price, prePrice: r.pre_price,
-      amount: r.amount, assumed: !!r.assumed, from: r.run_from, until: r.run_till, kind: r.kind
+      amount: r.amount, assumed: !!r.assumed, from: r.run_from, until: r.run_till, kind: r.kind,
+      // The pack as printed (kg, l or pcs), for showing what you actually buy.
+      size: r.size_amount, sizeUnit: r.size_unit
     };
     if (r.kind === 'hylde') (shelf[r.ingredient_id] ??= []).push(entry);
     else (offers[r.ingredient_id] ??= []).push(entry);
@@ -331,6 +333,14 @@ function pickShelf(list) {
 // Every food item valid right now, for "Tilføj vare": people search it and add what
 // a recipe doesn't cover. Kept apart from weekPayload so the week loads fast and the
 // catalog is fetched only when someone opens the search.
+function ingredientOf(r) {
+  const offer = {
+    heading: r.heading, description: '', price: r.price,
+    quantity: r.size_amount ? { amount: r.size_amount, unit: r.size_unit } : null
+  };
+  return matchOffer(offer, { shelf: r.kind === 'hylde' })[0]?.ingredientId ?? null;
+}
+
 export function catalogPayload(db, week) {
   const now = new Date().toISOString();
   const items = db.prepare(`
@@ -339,7 +349,9 @@ export function catalogPayload(db, week) {
     ORDER BY o.heading
   `).all(week, now, now).map((r) => ({
     id: r.id, store: r.store_id, title: r.heading, price: r.price, prePrice: r.pre_price,
-    amount: r.size_amount, unit: r.size_unit, until: r.run_till, kind: r.kind
+    amount: r.size_amount, unit: r.size_unit, until: r.run_till, kind: r.kind,
+    // The recipe ingredient this product is, so an added agurk joins the agurk line.
+    ing: ingredientOf(r)
   }));
   return { week, generatedAt: now, items };
 }
