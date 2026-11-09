@@ -1,19 +1,26 @@
 import { useState } from 'react';
-import { Check, Home, Share, Undo } from './icons.jsx';
+import { Check, Home, Minus, Share, Undo } from './icons.jsx';
 import { isExact } from '../lib/pricing.js';
-import { kr, packSize, capitalize, sourceParts, updatedLabel } from '../lib/format.js';
+import { kr, packSize, productSize, capitalize, sourceParts, updatedLabel } from '../lib/format.js';
+import { AddItem } from './AddItem.jsx';
 
-export function ListView({ data, list, checked, onCheck, onAtHome, onBackHome }) {
+export function ListView({ data, list, checked, stores, extras, onCheck, onAtHome, onBackHome, onAddExtra, onRemoveExtra }) {
   const storesById = Object.fromEntries(data.stores.map((s) => [s.id, s]));
   const [toast, setToast] = useState('');
 
-  const product = (i) =>
-    i.source.offer ? `${i.source.packs} × ${i.source.offer.title}` : `${i.source.packs} × ${packSize(i.source.packSize, i.ing)}`;
+  const product = (i) => {
+    if (i.extra) {
+      const size = productSize(i.extra.amount, i.extra.unit);
+      return size ? `${i.extra.qty} × ${size}` : `${i.extra.qty} stk`;
+    }
+    return i.source.offer ? `${i.source.packs} × ${i.source.offer.title}` : `${i.source.packs} × ${packSize(i.source.packSize, i.ing)}`;
+  };
+  const nameOf = (i) => (i.extra ? i.extra.title : capitalize(i.ing.name));
 
   const share = async () => {
     const text = list.groups.map((g) => {
       const name = g.key === 'other' ? 'Øvrige varer' : storesById[g.key]?.name;
-      return `${name}\n${g.items.map((i) => `• ${capitalize(i.ing.name)}: ${product(i)}`).join('\n')}`;
+      return `${name}\n${g.items.map((i) => `• ${nameOf(i)}: ${product(i)}`).join('\n')}`;
     }).join('\n\n');
     try {
       if (navigator.share) await navigator.share({ title: 'Indkøbsliste', text });
@@ -43,7 +50,7 @@ export function ListView({ data, list, checked, onCheck, onAtHome, onBackHome })
       </header>
 
       {empty ? (
-        <div className="empty"><p>Listen fyldes, når du tilføjer retter til ugen.</p></div>
+        <div className="empty"><p>Listen fyldes, når du tilføjer retter til ugen eller selv tilføjer varer.</p></div>
       ) : (
         <div className="summary">
           <div className="summary-total">{kr(list.total)}</div>
@@ -60,6 +67,8 @@ export function ListView({ data, list, checked, onCheck, onAtHome, onBackHome })
           </div>
         </div>
       )}
+
+      <AddItem stores={stores} storesById={storesById} extras={extras} onAdd={onAddExtra} />
 
       {list.groups.map((g) => {
         const store = storesById[g.key];
@@ -81,18 +90,25 @@ export function ListView({ data, list, checked, onCheck, onAtHome, onBackHome })
                   <li key={i.id} className={`shop-item ${on ? 'is-done' : ''}`}>
                     <button
                       type="button" className="shop-check" aria-pressed={on}
-                      aria-label={`${capitalize(i.ing.name)} ${on ? 'købt' : 'ikke købt'}`}
+                      aria-label={`${nameOf(i)} ${on ? 'købt' : 'ikke købt'}`}
                       onClick={() => onCheck(i.id)}
                     >
                       {on && <Check size={15} />}
                     </button>
                     <span className="shop-text">
-                      <span className="shop-name">{capitalize(i.ing.name)}</span>
+                      <span className="shop-name">{nameOf(i)}</span>
                       <span className="shop-product">{product(i)}</span>
                       <span className={`shop-kind ${i.source.kind}`}>{store ? note : [where, note].filter(Boolean).join(' · ')}</span>
                     </span>
                     <span className="shop-price">{isExact(i.source) ? '' : 'ca. '}{kr(i.source.cost)}</span>
-                    {!i.ing.staple && (
+                    {i.extra ? (
+                      <button
+                        type="button" className="shop-home" onClick={() => onRemoveExtra(i.extra.id)}
+                        aria-label={i.extra.qty > 1 ? `Én ${i.extra.title} mindre` : `Fjern ${i.extra.title} fra listen`}
+                      >
+                        <Minus size={17} />
+                      </button>
+                    ) : !i.ing.staple && (
                       <button type="button" className="shop-home" aria-label={`Har ${i.ing.name} hjemme`} onClick={() => onAtHome(i.id)}>
                         <Home size={17} />
                       </button>

@@ -410,6 +410,36 @@ ul, ol { margin: 0; padding: 0; }
   display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 12px; border-radius: 999px;
   font-size: 13px; font-weight: 600; background: var(--surface); border: 1px solid var(--line);
 }
+/* Tilføj vare: a search field over the list, results in the same boxes as the list */
+.add-item { display: flex; flex-direction: column; gap: 8px; }
+.add-search {
+  width: 100%; height: 48px; padding: 0 18px; border-radius: 999px; border: 1px solid var(--line);
+  background: var(--surface); color: var(--ink); font: inherit; font-size: 16px; /* 16px: no zoom on iOS */
+}
+.add-search::placeholder { color: var(--muted); }
+.add-search:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.add-btn {
+  flex: none; width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center;
+  background: var(--surface-2); color: var(--ink);
+}
+.add-btn.is-on { background: var(--accent); color: var(--accent-ink); }
+.add-count { font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+/* Suggestions in the week: dishes that reuse what is already bought */
+.suggest-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.suggest-item {
+  width: 100%; display: flex; align-items: center; gap: 12px; padding: 10px 14px 10px 10px; text-align: left;
+  border-radius: 18px; background: var(--surface); border: 1px solid var(--line);
+}
+.suggest-art { flex: none; width: 56px; height: 56px; border-radius: 14px; overflow: hidden; }
+.suggest-art.dish-art--gen { display: grid; place-items: center; }
+.suggest-art .dish-emoji { font-size: 28px; }
+.suggest-have { font-size: 13px; color: var(--muted); }
+.suggest-price { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; white-space: nowrap; }
+.suggest-price strong { color: var(--accent); font-variant-numeric: tabular-nums; }
+.suggest-price small { font-size: 12px; color: var(--muted); }
+.detail-shared { font-size: 13px; font-weight: 650; color: var(--accent-on-photo); }
+
 .toast {
   position: fixed; left: 50%; bottom: 96px; transform: translateX(-50%); z-index: 30;
   background: var(--ink); color: var(--bg); padding: 10px 18px; border-radius: 999px; font-weight: 600;

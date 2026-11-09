@@ -14,7 +14,8 @@ import { Cards, Calendar, List } from './components/icons.jsx';
 
 const PREFS = { onboarded: false, stores: [], people: 2, diet: 'alle', atHome: [], saved: [] };
 // Weekly state is tagged with the ISO week and starts fresh when the avis changes.
-const WEEK = { week: null, plan: [], seen: [], checked: [] };
+// extras: products added by hand in "Tilføj vare" ({ id, store, title, price, amount, unit, kind, until, qty }).
+const WEEK = { week: null, plan: [], seen: [], checked: [], extras: [] };
 // Dishes planned in earlier weeks, so the deck can rest them for a while. Stays on the phone.
 const PAST = { weeks: {} };
 
@@ -60,8 +61,8 @@ export default function App() {
   }, [data, state.week, state.plan, setState, setPast]);
 
   const list = useMemo(
-    () => (data ? shoppingList(data, state.plan, { stores: prefs.stores, atHome: prefs.atHome }) : null),
-    [data, state.plan, prefs.stores, prefs.atHome]
+    () => (data ? shoppingList(data, state.plan, { stores: prefs.stores, atHome: prefs.atHome, extras: state.extras }) : null),
+    [data, state.plan, prefs.stores, prefs.atHome, state.extras]
   );
 
   const markSeen = (id) => setState((s) => ({ ...s, seen: [...s.seen, id] }));
@@ -118,6 +119,21 @@ export default function App() {
     setSheet(null);
   };
 
+  // Tapping + again buys one more; minus takes one off and removes the last.
+  const addExtra = (item) => setState((s) => {
+    const found = s.extras.find((x) => x.id === item.id);
+    const extras = found
+      ? s.extras.map((x) => (x.id === item.id ? { ...x, qty: x.qty + 1 } : x))
+      : [...s.extras, { id: item.id, store: item.store, title: item.title, price: item.price, amount: item.amount,
+          unit: item.unit, kind: item.kind, until: item.until, qty: 1 }];
+    return { ...s, extras };
+  });
+  const removeExtra = (id) => setState((s) => ({
+    ...s,
+    extras: s.extras.flatMap((x) => (x.id !== id ? [x] : x.qty > 1 ? [{ ...x, qty: x.qty - 1 }] : [])),
+    checked: s.checked.filter((c) => c !== `x-${id}`)
+  }));
+
   const toggleIn = (list, id) => (list.includes(id) ? list.filter((x) => x !== id) : [...list, id]);
 
   if (error) {
@@ -159,12 +175,14 @@ export default function App() {
           <WeekView
             data={data} plan={state.plan} prefs={prefs} list={list}
             onOpen={(recipe, item) => setSheet({ recipe, item, mode: 'edit' })}
+            onSuggest={(recipe) => setSheet({ recipe, mode: 'add' })}
             onSwipe={() => setTab('swipe')}
           />
         )}
         {tab === 'list' && (
           <ListView
-            data={data} list={list} checked={state.checked}
+            data={data} list={list} checked={state.checked} stores={prefs.stores} extras={state.extras}
+            onAddExtra={addExtra} onRemoveExtra={removeExtra}
             onCheck={(id) => setState((s) => ({ ...s, checked: toggleIn(s.checked, id) }))}
             onAtHome={(id) => setPrefs((p) => ({ ...p, atHome: [...p.atHome, id] }))}
             onBackHome={(id) => setPrefs((p) => ({ ...p, atHome: p.atHome.filter((x) => x !== id) }))}

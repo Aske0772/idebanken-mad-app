@@ -44,6 +44,11 @@ export function openDb(file = process.env.DB_FILE ?? join(DATA_DIR, 'mad.db')) {
   if (!db.prepare('PRAGMA table_info(offers)').all().some((c) => c.name === 'kind')) {
     db.exec("ALTER TABLE offers ADD COLUMN kind TEXT NOT NULL DEFAULT 'tilbud'");
   }
+  // Pack size as printed (SI: kg, l or pcs), so the "Tilføj vare" catalog can show it.
+  if (!db.prepare('PRAGMA table_info(offers)').all().some((c) => c.name === 'size_amount')) {
+    db.exec('ALTER TABLE offers ADD COLUMN size_amount REAL');
+    db.exec('ALTER TABLE offers ADD COLUMN size_unit TEXT');
+  }
   seedRecipes(db);
   return db;
 }

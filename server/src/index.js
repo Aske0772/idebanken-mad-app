@@ -3,7 +3,7 @@ import { existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { openDb } from './db.js';
-import { refreshWeek, latestWeek, weekKey, weekPayload, IMAGE_DIR } from './week.js';
+import { refreshWeek, latestWeek, weekKey, weekPayload, catalogPayload, IMAGE_DIR } from './week.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 // API_PORT, not PORT: dev tools often set PORT for the web server.
@@ -36,6 +36,14 @@ app.get('/api/week', (_req, res) => {
   if (!latest) return res.status(202).json({ status: 'refreshing' });
   res.set('Cache-Control', 'no-store');
   res.json({ ...weekPayload(db, latest.week), refreshing: refreshing != null });
+});
+
+// Every food item this week, for the "Tilføj vare" search.
+app.get('/api/catalog', (_req, res) => {
+  const latest = latestWeek(db);
+  if (!latest) return res.status(202).json({ status: 'refreshing' });
+  res.set('Cache-Control', 'no-store');
+  res.json(catalogPayload(db, latest.week));
 });
 
 app.post('/api/refresh', async (_req, res) => {

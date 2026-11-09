@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { openDb } from '../src/db.js';
-import { refreshWeek, weekPayload, weekKey, offerKind } from '../src/week.js';
+import { refreshWeek, weekPayload, catalogPayload, weekKey, offerKind } from '../src/week.js';
 import { SourceBlockedError } from '../src/sources/http.js';
 
 const day = 86400000;
@@ -15,6 +15,7 @@ const FAKE = {
   '9ba51': [
     offer('a', '9ba51', 'Dansk kyllingebrystfilet', 25, 0.4),
     offer('b', '9ba51', 'Lays chips', 12, 0.175),
+    offer('tv', '9ba51', 'Samsung TV 55"', 3999, null),
     offer('expired', '9ba51', 'Hakket oksekød', 30, 0.5, at(-8), at(-1)),
     offer('future', '9ba51', 'Dansk laksefilet', 50, 0.5, at(2), at(9))
   ],
@@ -58,7 +59,22 @@ test('refreshWeek stores matched offers and the dishes they unlock', async () =>
   assert.ok(inWeek.includes('kylling-i-karry'));
   assert.ok(inWeek.includes('ovnlaks-kartofler'));
   assert.ok(!inWeek.includes('carbonara'), 'bacon is only a catalog price, not a tilbud');
-  assert.equal(payload.stores.find((s) => s.id === '9ba51').offerCount, 1);
+  // Every food tilbud counts, also chips that no recipe uses; the TV does not.
+  assert.equal(payload.stores.find((s) => s.id === '9ba51').offerCount, 2);
+});
+
+test('the catalog holds every food item valid now, also those no recipe uses', async () => {
+  const db = openDb(':memory:');
+  const { items } = catalogPayload(db, await refresh(db));
+  const ids = items.map((i) => i.id);
+  assert.ok(ids.includes('b'), 'chips are food');
+  assert.ok(!ids.includes('tv'), 'a TV is not');
+  assert.ok(ids.includes('rema-1') && ids.includes('lidl-1'), 'shelf products are kept');
+  assert.ok(!ids.includes('expired') && !ids.includes('future'));
+  assert.deepEqual(items.find((i) => i.id === 'b'), {
+    id: 'b', store: '9ba51', title: 'Lays chips', price: 12, prePrice: null,
+    amount: 0.175, unit: 'kg', until: items.find((i) => i.id === 'b').until, kind: 'tilbud'
+  });
 });
 
 test('only prices valid right now are sent', async () => {
