@@ -139,3 +139,48 @@ describe('hand-added products', () => {
     expect(list.groups[0].items[0]).toMatchObject({ id: 'x-kaffe', source: { cost: 60, packs: 2 } });
   });
 });
+
+describe('pack choice', () => {
+  const milk = {
+    ingredients: { maelk: { name: 'mælk', unit: 'ml', cat: 'mejeri', staple: false, normal: [1000, 13] } },
+    offers: {
+      maelk: [
+        { id: 'small', store: 'rema', price: 3.95, amount: 250, kind: 'hylde' },
+        { id: 'liter', store: 'rema', price: 10.95, amount: 1000, kind: 'hylde' }
+      ]
+    },
+    recipes: []
+  };
+  it('takes a liter over two small cartons when it costs only a little more', () => {
+    expect(cheapest(milk, 'maelk', 500, ['rema'])).toMatchObject({ offer: { id: 'liter' }, packs: 1, cost: 10.95 });
+  });
+  it('keeps the small pack when the big one costs much more', () => {
+    expect(cheapest(milk, 'maelk', 200, ['rema']).offer.id).toBe('small');
+  });
+});
+
+describe('+ and − on the list', () => {
+  const plan = [{ id: 'p1', recipeId: 'karry', people: 4, days: 1, staples: [] }];
+  it('buys extra packs without changing what the dish costs', () => {
+    const base = shoppingList(data, plan, { stores: ['netto'] });
+    const more = shoppingList(data, plan, { stores: ['netto'], adjust: { kylling: 1 } });
+    const line = more.groups.flatMap((g) => g.items).find((i) => i.id === 'kylling');
+    expect(line.source.packs).toBe(base.groups.flatMap((g) => g.items).find((i) => i.id === 'kylling').source.packs + 1);
+    expect(more.total - base.total).toBe(25);
+    expect(more.dishTotal).toBe(base.dishTotal);
+    expect(more.shares.p1).toBe(base.shares.p1);
+  });
+  it('never goes below one pack', () => {
+    const list = shoppingList(data, plan, { stores: ['netto'], adjust: { kylling: -9 } });
+    expect(list.groups.flatMap((g) => g.items).find((i) => i.id === 'kylling').source.packs).toBe(1);
+  });
+  it('puts another brand of an ingredient right below its line', () => {
+    const extras = [
+      { id: 'kaffe', store: 'netto', title: 'Kaffe', price: 30, qty: 1, kind: 'tilbud' },
+      { id: 'k2', store: 'netto', title: 'Andet kyllingebryst', price: 30, qty: 1, kind: 'tilbud', ing: 'kylling' }
+    ];
+    const ids = shoppingList(data, plan, { stores: ['netto'], extras }).groups[0].items.map((i) => i.id);
+    expect(ids.indexOf('x-k2')).toBe(ids.indexOf('kylling') + 1);
+    expect(ids.at(-1)).toBe('x-kaffe');
+  });
+});

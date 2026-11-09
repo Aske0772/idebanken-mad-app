@@ -73,8 +73,10 @@ test('the catalog holds every food item valid now, also those no recipe uses', a
   assert.ok(!ids.includes('expired') && !ids.includes('future'));
   assert.deepEqual(items.find((i) => i.id === 'b'), {
     id: 'b', store: '9ba51', title: 'Lays chips', price: 12, prePrice: null,
-    amount: 0.175, unit: 'kg', until: items.find((i) => i.id === 'b').until, kind: 'tilbud'
+    amount: 0.175, unit: 'kg', until: items.find((i) => i.id === 'b').until, kind: 'tilbud', ing: null
   });
+  // A product that is a recipe ingredient says which, so it can join that line on the list.
+  assert.ok(items.some((i) => i.ing === 'ris'), 'rice on the shelf is the ingredient ris');
 });
 
 test('only prices valid right now are sent', async () => {
@@ -90,6 +92,7 @@ test('catalog and shelf prices are kept, labelled by kind', async () => {
   const payload = weekPayload(db, await refresh(db));
   assert.equal(payload.offers.bacon[0].kind, 'fast');
   assert.deepEqual(payload.offers.ris.map((o) => [o.kind, o.price]), [['hylde', 11.95]]);
+  assert.ok(payload.offers.ris[0].size > 0 && payload.offers.ris[0].sizeUnit, 'the pack size as printed is sent');
   assert.deepEqual(payload.offers.sukker.map((o) => [o.kind, o.store, o.price]), [['hylde', '71c90', 6]]);
 });
 
